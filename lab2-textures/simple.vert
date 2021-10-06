@@ -6,10 +6,9 @@ uniform vec3 cameraPosition;
 
 // >>> @task 3.2
 
-void main()
-{
-	vec4 pos = vec4(position.xyz - cameraPosition.xyz, 1);
-	gl_Position = projectionMatrix * pos;
+void main() {
+    vec4 pos = vec4(position.xyz - cameraPosition.xyz, 1);
+    gl_Position = projectionMatrix * pos;
 
-	// >>> @task 3.3
+    // >>> @task 3.3
 }

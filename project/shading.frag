@@ -57,41 +57,37 @@ layout(location = 0) out vec4 fragmentColor;
 
 
 
-vec3 calculateDirectIllumiunation(vec3 wo, vec3 n)
-{
-	return vec3(material_color);
+vec3 calculateDirectIllumiunation(vec3 wo, vec3 n) {
+    return vec3(material_color);
 }
 
-vec3 calculateIndirectIllumination(vec3 wo, vec3 n)
-{
-	return vec3(0.0);
+vec3 calculateIndirectIllumination(vec3 wo, vec3 n) {
+    return vec3(0.0);
 }
 
-void main()
-{
-	float visibility = 1.0;
-	float attenuation = 1.0;
+void main() {
+    float visibility = 1.0;
+    float attenuation = 1.0;
 
-	vec3 wo = -normalize(viewSpacePosition);
-	vec3 n = normalize(viewSpaceNormal);
+    vec3 wo = -normalize(viewSpacePosition);
+    vec3 n = normalize(viewSpaceNormal);
 
-	// Direct illumination
-	vec3 direct_illumination_term = visibility * calculateDirectIllumiunation(wo, n);
+    // Direct illumination
+    vec3 direct_illumination_term = visibility * calculateDirectIllumiunation(wo, n);
 
-	// Indirect illumination
-	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n);
+    // Indirect illumination
+    vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n);
 
-	///////////////////////////////////////////////////////////////////////////
-	// Add emissive term. If emissive texture exists, sample this term.
-	///////////////////////////////////////////////////////////////////////////
-	vec3 emission_term = material_emission * material_color;
-	if(has_emission_texture == 1)
-	{
-		emission_term = texture(emissiveMap, texCoord).xyz;
-	}
+    ///////////////////////////////////////////////////////////////////////////
+    // Add emissive term. If emissive texture exists, sample this term.
+    ///////////////////////////////////////////////////////////////////////////
+    vec3 emission_term = material_emission * material_color;
+    if (has_emission_texture == 1) {
+        emission_term = texture(emissiveMap, texCoord).xyz;
+    }
 
-	vec3 shading = direct_illumination_term + indirect_illumination_term + emission_term;
+    vec3 shading = direct_illumination_term + indirect_illumination_term + emission_term;
 
-	fragmentColor = vec4(shading, 1.0);
-	return;
+    fragmentColor = vec4(shading, 1.0);
+    return;
 }

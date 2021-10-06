@@ -7,7 +7,6 @@ layout(location = 0) out vec4 fragmentColor;
 layout(binding = 0) uniform sampler2D image;
 in vec2 texCoord;
 
-void main()
-{
-	fragmentColor = texture(image, texCoord);
+void main() {
+    fragmentColor = texture(image, texCoord);
 }

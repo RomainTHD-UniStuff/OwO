@@ -7,7 +7,6 @@ layout(location = 1) in vec3 color;
 //         it to the vertex color
 ///////////////////////////////////////////////////////////////////////////////
 
-void main()
-{
-	gl_Position = vec4(position, 1.0);
+void main() {
+    gl_Position = vec4(position, 1.0);
 }

@@ -12,10 +12,10 @@ in vec2 texCoord;
 
 layout(location = 0) out vec4 fragmentColor;
 
-void main()
-{
-	//fragmentColor = texture(colortexture, texCoord.xy);
-	fragmentColor = vec4(material_diffuse_color + material_emissive_color, 1.0);
-	if(has_diffuse_texture == 1)
-		fragmentColor = texture(colortexture, texCoord.xy);
+void main() {
+    // fragmentColor = texture(colortexture, texCoord.xy);
+    fragmentColor = vec4(material_diffuse_color + material_emissive_color, 1.0);
+    if (has_diffuse_texture == 1) {
+        fragmentColor = texture(colortexture, texCoord.xy);
+    }
 }
