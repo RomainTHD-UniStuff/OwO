@@ -2,7 +2,6 @@
 
 #include <string>
 #include <fstream>
-#include <streambuf>
 #include <cstdlib>
 #include <SDL.h>
 #include <labhelper.h>
@@ -55,9 +54,9 @@ void initGL() {
     // Define the colors for each of the three vertices of the triangle
     const float colors[] = {
         //   R     G     B
-        1.0f, 1.0f, 1.0f, // White
-        1.0f, 1.0f, 1.0f, // White
-        1.0f, 1.0f, 1.0f  // White
+        1.0f, 0.0f, 0.0f, // Red
+        0.75f, 0.0f, 1.0f, // Purple
+        1.0f, 0.25f, 0.5f  // Pink
     };
     // Create a handle for the vertex color buffer
     GLuint colorBuffer;
@@ -80,11 +79,11 @@ void initGL() {
     // Makes positionBuffer the current array buffer for subsequent calls.
     glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
     // Attaches positionBuffer to vertexArrayObject, in the 0th attribute location
-    glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, 0 /*offset*/);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
     // Makes colorBuffer the current array buffer for subsequent calls.
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     // Attaches colorBuffer to vertexArrayObject, in the 1st attribute location
-    glVertexAttribPointer(1, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, 0 /*offset*/);
+    glVertexAttribPointer(1, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
     glEnableVertexAttribArray(0); // Enable the vertex position attribute
     glEnableVertexAttribArray(1); // Enable the vertex color attribute
 
@@ -113,8 +112,8 @@ void initGL() {
     const char* vs = vs_src.c_str();
     const char* fs = fs_src.c_str();
 
-    glShaderSource(vertexShader, 1, &vs, NULL);
-    glShaderSource(fragmentShader, 1, &fs, NULL);
+    glShaderSource(vertexShader, 1, &vs, nullptr);
+    glShaderSource(fragmentShader, 1, &fs, nullptr);
 
     // Compile the shader, translates into internal representation and checks for errors.
     glCompileShader(vertexShader);
@@ -166,15 +165,16 @@ void initGL() {
 }
 
 
-void display(void) {
+void display() {
     // The viewport determines how many pixels we are rasterizing to
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
     glViewport(0, 0, w, h); // Set viewport
 
     glClearColor(g_clearColor[0], g_clearColor[1], g_clearColor[2], 1.0); // Set clear color
-    glClear(GL_BUFFER); // Clears the color buffer and the z-buffer
+    // glClear(GL_BUFFER); // Clears the color buffer and the z-buffer
     // Instead of glClear(GL_BUFFER) the call should be glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // We disable backface culling for this tutorial, otherwise care must be taken with the winding order
     // of the vertices. It is however a lot faster to enable culling when drawing large scenes.
@@ -205,7 +205,7 @@ void gui() {
     ImGui::Render();
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     g_window = labhelper::init_window_SDL("OpenGL Lab 1");
 
     initGL();
@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
         // TASK 1: Uncomment the call to gui below to show the GUI
         ///////////////////////////////////////////////////////////////////////////
         // Then render overlay GUI.
-        // gui();
+        gui();
 
         // Swap front and back buffer. This frame will now been displayed.
         SDL_GL_SwapWindow(g_window);
