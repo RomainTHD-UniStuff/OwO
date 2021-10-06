@@ -32,8 +32,9 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data) {
     ImGuiIO& io = ImGui::GetIO();
     int fb_width = (int) (io.DisplaySize.x * io.DisplayFramebufferScale.x);
     int fb_height = (int) (io.DisplaySize.y * io.DisplayFramebufferScale.y);
-    if (fb_width == 0 || fb_height == 0)
+    if (fb_width == 0 || fb_height == 0) {
         return;
+    }
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
     // Backup GL state
@@ -138,22 +139,30 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
     glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
     glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
-    if (last_enable_blend)
+    if (last_enable_blend) {
         glEnable(GL_BLEND);
-    else
+    }
+    else {
         glDisable(GL_BLEND);
-    if (last_enable_cull_face)
+    }
+    if (last_enable_cull_face) {
         glEnable(GL_CULL_FACE);
-    else
+    }
+    else {
         glDisable(GL_CULL_FACE);
-    if (last_enable_depth_test)
+    }
+    if (last_enable_depth_test) {
         glEnable(GL_DEPTH_TEST);
-    else
+    }
+    else {
         glDisable(GL_DEPTH_TEST);
-    if (last_enable_scissor_test)
+    }
+    if (last_enable_scissor_test) {
         glEnable(GL_SCISSOR_TEST);
-    else
+    }
+    else {
         glDisable(GL_SCISSOR_TEST);
+    }
     glPolygonMode(GL_FRONT_AND_BACK, last_polygon_mode[0]);
     glViewport(last_viewport[0], last_viewport[1], (GLsizei) last_viewport[2], (GLsizei) last_viewport[3]);
     glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei) last_scissor_box[2],
@@ -172,19 +181,24 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event* event) {
     ImGuiIO& io = ImGui::GetIO();
     switch (event->type) {
         case SDL_MOUSEWHEEL: {
-            if (event->wheel.y > 0)
+            if (event->wheel.y > 0) {
                 g_MouseWheel = 1;
-            if (event->wheel.y < 0)
+            }
+            if (event->wheel.y < 0) {
                 g_MouseWheel = -1;
+            }
             return true;
         }
         case SDL_MOUSEBUTTONDOWN: {
-            if (event->button.button == SDL_BUTTON_LEFT)
+            if (event->button.button == SDL_BUTTON_LEFT) {
                 g_MousePressed[0] = true;
-            if (event->button.button == SDL_BUTTON_RIGHT)
+            }
+            if (event->button.button == SDL_BUTTON_RIGHT) {
                 g_MousePressed[1] = true;
-            if (event->button.button == SDL_BUTTON_MIDDLE)
+            }
+            if (event->button.button == SDL_BUTTON_MIDDLE) {
                 g_MousePressed[2] = true;
+            }
             return true;
         }
         case SDL_TEXTINPUT: {
@@ -387,8 +401,9 @@ void ImGui_ImplSdlGL3_Shutdown() {
 }
 
 void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window) {
-    if (!g_FontTexture)
+    if (!g_FontTexture) {
         ImGui_ImplSdlGL3_CreateDeviceObjects();
+    }
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -411,12 +426,14 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window) {
     // (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())
     int mx, my;
     Uint32 mouseMask = SDL_GetMouseState(&mx, &my);
-    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS)
+    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS) {
         io.MousePos =
             ImVec2((float) mx,
                    (float) my); // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
-    else
+    }
+    else {
         io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+    }
 
     io.MouseDown[0] =
         g_MousePressed[0]
