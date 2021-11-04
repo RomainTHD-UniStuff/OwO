@@ -26,6 +26,9 @@ GLuint shaderProgram;
 float g_clearColor[3] = {0.2f, 0.2f, 0.8f};
 
 void initGL() {
+    vertexArrayObjects.push_back(0);
+    vertexArrayObjects.push_back(0);
+
     //////////////////////////////////////////////////////////////////////////////
     // Vertex positions
     //////////////////////////////////////////////////////////////////////////////
@@ -60,19 +63,17 @@ void initGL() {
     // TASK 3: Change these colors to something more fun.
     //////////////////////////////////////////////////////////////////////////////
     // Define the colors for each of the three vertices of the triangle
-    const float colors[] = {
+    const float colors[][9] = {{
         //   R     G     B
         1.0f, 0.0f, 0.0f, // Red
         0.75f, 0.0f, 1.0f, // Purple
         1.0f, 0.25f, 0.5f  // Pink
-    };
-    // Create a handle for the vertex color buffer
-    GLuint colorBuffer;
-    glGenBuffers(1, &colorBuffer);
-    // Set the newly created buffer as the current one
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    // Send the vertex color data to the current buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    }, {
+        //   R     G     B
+        1.0f, 0.0f, 0.0f, // Red
+        1.0f, 0.5f, 0.0f, // Orange
+        1.0f, 1.0f, 0.0f  // Yellow
+    }};
 
     //////////////////////////////////////////////////////////////////////////////
     // Create a vertex array object and connect the vertex buffer objects to it
@@ -82,6 +83,14 @@ void initGL() {
     //////////////////////////////////////////////////////////////////////////////
 
     for (int i = 0; i < vertexArrayObjects.size(); ++i) {
+        // Create a handle for the vertex color buffer
+        GLuint colorBuffer;
+        glGenBuffers(1, &colorBuffer);
+        // Set the newly created buffer as the current one
+        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+        // Send the vertex color data to the current buffer
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colors[i]), colors[i], GL_STATIC_DRAW);
+
         glGenVertexArrays(1, &vertexArrayObjects[i]);
         // Bind the vertex array object
         // The following calls will affect this vertex array object.
