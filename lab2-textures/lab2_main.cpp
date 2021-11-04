@@ -30,7 +30,7 @@ GLuint shaderProgram;
 
 // The vertexArrayObject here will hold the pointers to
 // the vertex data (in positionBuffer) and color data per vertex (in colorBuffer)
-GLuint positionBuffer, colorBuffer, indexBuffer, vertexArrayObject;
+GLuint positionBuffer, colorBuffer, indexBuffer, vertexArrayObject, texBuffer;
 
 
 void initGL() {
@@ -56,9 +56,9 @@ void initGL() {
     glGenBuffers(1, &positionBuffer);
     // Set the newly created buffer as the current one
     glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-    // Send the vetex position data to the current buffer
+    // Send the vertex position data to the current buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, 0 /*offset*/);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
     // Enable the attribute
     glEnableVertexAttribArray(0);
 
@@ -68,6 +68,20 @@ void initGL() {
     //				 Set up the attrib pointer.
     //				 Enable the vertex attrib array.
     ///////////////////////////////////////////////////////////////////////////
+
+    float texCoords[] = {
+        0.0f, 0.0f, // (u,v) for v0
+        0.0f, 1.0f, // (u,v) for v1
+        1.0f, 1.0f, // (u,v) for v2
+        1.0f, 0.0f // (u,v) for v3
+    };
+
+    glGenBuffers(1, &texBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, texBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, false/*normalized*/, 0/*stride*/, nullptr/*offset*/);
+    glEnableVertexAttribArray(2);
 
     ///////////////////////////////////////////////////////////////////////////
     // Create the element array buffer object
@@ -81,7 +95,7 @@ void initGL() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
-    // The loadShaderProgram and linkShaderProgam functions are defined in glutil.cpp and
+    // The loadShaderProgram and linkShaderProgram functions are defined in glutil.cpp and
     // do exactly what we did in lab1 but are hidden for convenience
     shaderProgram = labhelper::loadShaderProgram("../lab2-textures/simple.vert",
                                                  "../lab2-textures/simple.frag");
@@ -94,7 +108,7 @@ void initGL() {
     // >>> @task 2
 }
 
-void display(void) {
+void display() {
     // The viewport determines how many pixels we are rasterizing to
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
@@ -130,7 +144,7 @@ void display(void) {
     // >>> @task 3.1
 
     glBindVertexArray(vertexArrayObject);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 
     glUseProgram(0); // "unsets" the current shader program. Not really necessary.
