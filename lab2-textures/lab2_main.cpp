@@ -19,18 +19,18 @@ SDL_Window* g_window = nullptr;
 
 using namespace glm;
 
-int mag = 1;
-int mini = 5;
+int mag = GL_LINEAR;
+int mini = GL_LINEAR_MIPMAP_LINEAR;
 float anisotropy = 16.0f;
 float camera_pan = 0.f;
-bool showUI = false;
+bool showUI = true;
 
 // The shaderProgram holds the vertexShader and fragmentShader
 GLuint shaderProgram;
 
 // The vertexArrayObject here will hold the pointers to
 // the vertex data (in positionBuffer) and color data per vertex (in colorBuffer)
-GLuint positionBuffer, colorBuffer, indexBuffer, vertexArrayObject, texBuffer;
+GLuint positionBuffer, colorBuffer, indexBuffer, vertexArrayObject, texBuffer, texture;
 
 
 void initGL() {
@@ -71,8 +71,8 @@ void initGL() {
 
     float texCoords[] = {
         0.0f, 0.0f, // (u,v) for v0
-        0.0f, 1.0f, // (u,v) for v1
-        1.0f, 1.0f, // (u,v) for v2
+        0.0f, 15.0f, // (u,v) for v1
+        1.0f, 15.0f, // (u,v) for v2
         1.0f, 0.0f // (u,v) for v3
     };
 
@@ -106,9 +106,27 @@ void initGL() {
     //			Load Texture
     //************************************
     // >>> @task 2
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    int w, h, comp;
+    unsigned char* image = stbi_load("../scenes/asphalt.jpg", &w, &h, &comp, STBI_rgb_alpha);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    free(image);
 }
 
 void display() {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mini);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+
     // The viewport determines how many pixels we are rasterizing to
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
@@ -144,8 +162,11 @@ void display() {
     // >>> @task 3.1
 
     glBindVertexArray(vertexArrayObject);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
     glUseProgram(0); // "unsets" the current shader program. Not really necessary.
 }
@@ -157,18 +178,18 @@ void gui() {
     // ----------------- Set variables --------------------------
     ImGui::PushID("mag");
     ImGui::Text("Magnification");
-    ImGui::RadioButton("GL_NEAREST", &mag, 0);
-    ImGui::RadioButton("GL_LINEAR", &mag, 1);
+    ImGui::RadioButton("GL_NEAREST", &mag, GL_NEAREST);
+    ImGui::RadioButton("GL_LINEAR", &mag, GL_LINEAR);
     ImGui::PopID();
 
     ImGui::PushID("mini");
     ImGui::Text("Minification");
-    ImGui::RadioButton("GL_NEAREST", &mini, 0);
-    ImGui::RadioButton("GL_LINEAR", &mini, 1);
-    ImGui::RadioButton("GL_NEAREST_MIPMAP_NEAREST", &mini, 2);
-    ImGui::RadioButton("GL_NEAREST_MIPMAP_LINEAR", &mini, 3);
-    ImGui::RadioButton("GL_LINEAR_MIPMAP_NEAREST", &mini, 4);
-    ImGui::RadioButton("GL_LINEAR_MIPMAP_LINEAR", &mini, 5);
+    ImGui::RadioButton("GL_NEAREST", &mini, GL_NEAREST);
+    ImGui::RadioButton("GL_LINEAR", &mini, GL_LINEAR);
+    ImGui::RadioButton("GL_NEAREST_MIPMAP_NEAREST", &mini, GL_NEAREST_MIPMAP_NEAREST);
+    ImGui::RadioButton("GL_NEAREST_MIPMAP_LINEAR", &mini, GL_NEAREST_MIPMAP_LINEAR);
+    ImGui::RadioButton("GL_LINEAR_MIPMAP_NEAREST", &mini, GL_LINEAR_MIPMAP_NEAREST);
+    ImGui::RadioButton("GL_LINEAR_MIPMAP_LINEAR", &mini, GL_LINEAR_MIPMAP_LINEAR);
     ImGui::PopID();
 
     ImGui::SliderFloat("Anisotropic filtering", &anisotropy, 1.0, 16.0, "Number of samples: %.0f");
