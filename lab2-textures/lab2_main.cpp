@@ -29,19 +29,20 @@ bool showUI = true;
 GLuint shaderProgram;
 
 // The vertexArrayObject here will hold the pointers to
-// the vertex data (in positionBuffer) and color data per vertex (in colorBuffer)
-GLuint positionBuffer, colorBuffer, indexBuffer, vertexArrayObject, texBuffer, texture;
+// the vertex data (in roadPositionBuffer) and color data per vertex (in colorBuffer)
+GLuint vertexArrayObject;
 
+GLuint roadPositionBuffer,
+    roadIndexBuffer,
+    roadTexBuffer,
+    roadTexture;
 
-void initGL() {
-    ///////////////////////////////////////////////////////////////////////////
-    // Create the vertex array object
-    ///////////////////////////////////////////////////////////////////////////
-    // Create a handle for the vertex array object
-    glGenVertexArrays(1, &vertexArrayObject);
-    // Set it as current, i.e., related calls will affect this object
-    glBindVertexArray(vertexArrayObject);
+GLuint explosionPositionBuffer,
+    explosionIndexBuffer,
+    explosionTexBuffer,
+    explosionTexture;
 
+void initRoad() {
     ///////////////////////////////////////////////////////////////////////////
     // Create the positions buffer object
     ///////////////////////////////////////////////////////////////////////////
@@ -53,9 +54,9 @@ void initGL() {
         10.0f, -5.0f, -10.0f   // v3
     };
     // Create a handle for the vertex position buffer
-    glGenBuffers(1, &positionBuffer);
+    glGenBuffers(1, &roadPositionBuffer);
     // Set the newly created buffer as the current one
-    glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, roadPositionBuffer);
     // Send the vertex position data to the current buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
@@ -76,8 +77,8 @@ void initGL() {
         1.0f, 0.0f // (u,v) for v3
     };
 
-    glGenBuffers(1, &texBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, texBuffer);
+    glGenBuffers(1, &roadTexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, roadTexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
 
     glVertexAttribPointer(2, 2, GL_FLOAT, false/*normalized*/, 0/*stride*/, nullptr/*offset*/);
@@ -90,28 +91,20 @@ void initGL() {
         0, 1, 3, // Triangle 1
         1, 2, 3  // Triangle 2
     };
-    glGenBuffers(1, &indexBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glGenBuffers(1, &roadIndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, roadIndexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    glGenTextures(1, &roadTexture);
+    glBindTexture(GL_TEXTURE_2D, roadTexture);
 
-    // The loadShaderProgram and linkShaderProgram functions are defined in glutil.cpp and
-    // do exactly what we did in lab1 but are hidden for convenience
-    shaderProgram = labhelper::loadShaderProgram("../lab2-textures/simple.vert",
-                                                 "../lab2-textures/simple.frag");
-
-    //**********************************************
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     //************************************
     //			Load Texture
     //************************************
     // >>> @task 2
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     int w, h, comp;
     unsigned char* image = stbi_load("../scenes/asphalt.jpg", &w, &h, &comp, STBI_rgb_alpha);
@@ -120,6 +113,83 @@ void initGL() {
     glGenerateMipmap(GL_TEXTURE_2D);
 
     free(image);
+}
+
+void initExplosion() {
+    const float positions[] = {
+        // X      Y       Z
+        -1.0f, -1.0f, -10.0f,  // v0
+        -1.0f, 1.0f, -10.0f, // v1
+        1.0f, 1.0f, -10.0f, // v2
+        1.0f, -1.0f, -10.0f   // v3
+    };
+
+    // Create a handle for the vertex position buffer
+    glGenBuffers(1, &explosionPositionBuffer);
+    // Set the newly created buffer as the current one
+    glBindBuffer(GL_ARRAY_BUFFER, explosionPositionBuffer);
+    // Send the vertex position data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
+    // Enable the attribute
+
+    glEnableVertexAttribArray(0);
+
+    float texCoords[] = {
+        0.0f, 0.0f, // (u,v) for v0
+        0.0f, 1.0f, // (u,v) for v1
+        1.0f, 1.0f, // (u,v) for v2
+        1.0f, 0.0f // (u,v) for v3
+    };
+
+    glGenBuffers(1, &explosionTexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, explosionTexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, false/*normalized*/, 0/*stride*/, nullptr/*offset*/);
+
+    glEnableVertexAttribArray(2);
+
+    const int indices[] = {
+        0, 1, 3, // Triangle 1
+        1, 2, 3  // Triangle 2
+    };
+    glGenBuffers(1, &explosionIndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, explosionIndexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glGenTextures(1, &explosionTexture);
+    glBindTexture(GL_TEXTURE_2D, explosionTexture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    int w, h, comp;
+    unsigned char* image = stbi_load("../scenes/explosion.png", &w, &h, &comp, STBI_rgb_alpha);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    free(image);
+}
+
+void initGL() {
+    ///////////////////////////////////////////////////////////////////////////
+    // Create the vertex array object
+    ///////////////////////////////////////////////////////////////////////////
+    // Create a handle for the vertex array object
+    glGenVertexArrays(2, &vertexArrayObject); // FIXME: ?
+    // Set it as current, i.e., related calls will affect this object
+    glBindVertexArray(vertexArrayObject);
+
+    initRoad();
+    initExplosion();
+
+    // The loadShaderProgram and linkShaderProgram functions are defined in glutil.cpp and
+    // do exactly what we did in lab1 but are hidden for convenience
+    shaderProgram = labhelper::loadShaderProgram("../lab2-textures/simple.vert",
+                                                 "../lab2-textures/simple.frag");
 }
 
 void display() {
@@ -164,8 +234,11 @@ void display() {
     glBindVertexArray(vertexArrayObject);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, roadTexture);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, explosionTexture);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
     glUseProgram(0); // "unsets" the current shader program. Not really necessary.
