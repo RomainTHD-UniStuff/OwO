@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
                 g_prevMouseCoords.y = y;
             }
 
-            if (!(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+            if (!(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT))) {
                 g_isMouseDragging = false;
             }
 
@@ -238,18 +238,28 @@ int main(int argc, char* argv[]) {
         const uint8_t* state = SDL_GetKeyboardState(nullptr);
 
         // implement camera controls based on key states
+        const float speed = 10.f;
+        const float rotateSpeed = 2.f;
+
         if (state[SDL_SCANCODE_UP]) {
-            printf("Key Up is pressed down\n");
+            T[3] += speed * deltaTime * vec4(0.0f, 0.0f, 1.0f, 0.0f);
         }
         if (state[SDL_SCANCODE_DOWN]) {
-            printf("Key Down is pressed down\n");
+            T[3] -= speed * deltaTime * vec4(0.0f, 0.0f, 1.0f, 0.0f);
         }
         if (state[SDL_SCANCODE_LEFT]) {
-            printf("Key Left is pressed down\n");
+            // T[3] += speed * deltaTime * vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            R[0] -= rotateSpeed * deltaTime * R[2];
         }
         if (state[SDL_SCANCODE_RIGHT]) {
-            printf("Key Right is pressed down\n");
+            // T[3] -= speed * deltaTime * vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            R[0] += rotateSpeed * deltaTime * R[2];
         }
+
+        R[0] = normalize(R[0]);
+        R[2] = vec4(cross(vec3(R[0]), vec3(R[1])),  0.0f);
+
+        carModelMatrix = T * R;
     }
 
     // Shut down everything. This includes the window and all other subsystems.
