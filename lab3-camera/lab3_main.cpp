@@ -44,7 +44,7 @@ bool g_isMouseDragging = false;
 
 float currentTime = 0.0f;
 float deltaTime = 0.0f;
-bool showUI = false;
+bool showUI = true;
 
 // Models
 Model* cityModel = nullptr;
@@ -102,12 +102,14 @@ void display() {
 
     // Set up the view matrix
     // The view matrix defines where the viewer is looking
-    // Initially fixed, but will be replaced in the tutorial.
-    mat4 constantViewMatrix = mat4(0.707106769f, -0.408248276f, 1.00000000f, 0.000000000f, 0.000000000f,
-                                   0.816496551f, 1.00000000f, 0.000000000f, -0.707106769f, -0.408248276f,
-                                   1.00000000f, 0.000000000f, 0.000000000f, 0.000000000f, -30.0000000f,
-                                   1.00000000f);
-    mat4 viewMatrix = constantViewMatrix;
+
+    vec3 cameraRight = normalize(cross(cameraDirection, worldUp));
+    vec3 cameraUp = normalize(cross(cameraRight, cameraDirection));
+
+    mat3 cameraBaseVectorsWorldSpace(cameraRight, cameraUp, -cameraDirection);
+
+    mat4 cameraRotation = mat4(transpose(cameraBaseVectorsWorldSpace));
+    mat4 viewMatrix = cameraRotation * translate(-cameraPosition);
 
     // Setup the projection matrix
     if (w != old_w || h != old_h) {
@@ -128,7 +130,7 @@ void display() {
 
     // Ground
     // Task 5: Uncomment this
-    //drawGround(modelViewProjectionMatrix);
+    drawGround(modelViewProjectionMatrix);
 
     // car
     modelViewProjectionMatrix = projectionMatrix * viewMatrix * carModelMatrix;
@@ -235,11 +237,27 @@ int main(int argc, char* argv[]) {
                 }
                 g_prevMouseCoords.x = event.motion.x;
                 g_prevMouseCoords.y = event.motion.y;
+
+                if (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+                    float rotationSpeed = 0.005f;
+                    mat4 yaw = rotate(rotationSpeed * -delta_x, worldUp);
+                    mat4 pitch = rotate(rotationSpeed * -delta_y, normalize(cross(cameraDirection, worldUp)));
+                    cameraDirection = vec3(pitch * yaw * vec4(cameraDirection, 0.0f));
+                }
             }
         }
 
         // check keyboard state (which keys are still pressed)
         const uint8_t* state = SDL_GetKeyboardState(nullptr);
+
+        float translationSpeed = 0.1f;
+
+        if (state[SDL_SCANCODE_Z] || state[SDL_SCANCODE_W]) {
+            cameraPosition += cameraDirection * translationSpeed;
+        }
+        if (state[SDL_SCANCODE_S]) {
+            cameraPosition -= cameraDirection * translationSpeed;
+        }
 
         // implement camera controls based on key states
         const float speed = 10.f;
