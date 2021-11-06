@@ -50,7 +50,7 @@ bool showUI = false;
 Model* cityModel = nullptr;
 Model* carModel = nullptr;
 Model* groundModel = nullptr;
-mat4 carModelMatrix(1.0f);
+mat4 carModelMatrix(1.0f), carCircleModelMatrix(1.0f);
 
 vec3 worldUp = vec3(0.0f, 1.0f, 0.0f);
 
@@ -135,6 +135,10 @@ void display() {
     glUniformMatrix4fv(loc, 1, false, &modelViewProjectionMatrix[0].x);
     render(carModel);
 
+    // car circle
+    modelViewProjectionMatrix = projectionMatrix * viewMatrix * carCircleModelMatrix;
+    glUniformMatrix4fv(loc, 1, false, &modelViewProjectionMatrix[0].x);
+    render(carModel);
 
     glUseProgram(0);
 }
@@ -260,6 +264,14 @@ int main(int argc, char* argv[]) {
         R[2] = vec4(cross(vec3(R[0]), vec3(R[1])),  0.0f);
 
         carModelMatrix = T * R;
+
+        const float circleSpeed = 0.25;
+
+        const mat4 RCircleOrigin = rotate(circleSpeed * currentTime, vec3(0.f, 1.f, 0.f));
+        const mat4 TCircle = translate(vec3(0.f, 0.f, 10.f));
+        const mat4 RCircleAxis = rotate(pi<float>() / 2, vec3(0.f, 1.f, 0.f));
+
+        carCircleModelMatrix = RCircleOrigin * TCircle * RCircleAxis;
     }
 
     // Shut down everything. This includes the window and all other subsystems.
