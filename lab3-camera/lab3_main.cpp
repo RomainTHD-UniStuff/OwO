@@ -242,10 +242,10 @@ int main(int argc, char* argv[]) {
         const float rotateSpeed = 2.f;
 
         if (state[SDL_SCANCODE_UP]) {
-            T[3] += speed * deltaTime * vec4(0.0f, 0.0f, 1.0f, 0.0f);
+            T[3] += speed * deltaTime * R * vec4(0.0f, 0.0f, 1.0f, 0.0f);
         }
         if (state[SDL_SCANCODE_DOWN]) {
-            T[3] -= speed * deltaTime * vec4(0.0f, 0.0f, 1.0f, 0.0f);
+            T[3] -= speed * deltaTime * R * vec4(0.0f, 0.0f, 1.0f, 0.0f);
         }
         if (state[SDL_SCANCODE_LEFT]) {
             // T[3] += speed * deltaTime * vec4(1.0f, 0.0f, 0.0f, 0.0f);
