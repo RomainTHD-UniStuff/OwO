@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <SDL.h>
 #include <labhelper.h>
-#include <vector>
 
 #include <imgui.h>
 #include <imgui_impl_sdl_gl3.h>
@@ -16,7 +15,7 @@ SDL_Window* g_window = nullptr;
 // `vertexArrayObjects' holds the data for each vertex. Data for each vertex
 // consists of positions (from positionBuffer) and color (from colorBuffer)
 // in this example.
-std::vector<GLuint> vertexArrayObjects;
+GLuint vertexArrayObject_0, vertexArrayObject_1;
 
 // The shaderProgram combines a vertex shader (vertexShader) and a
 // fragment shader (fragmentShader) into a single GLSL program that can
@@ -26,35 +25,38 @@ GLuint shaderProgram;
 float g_clearColor[3] = {0.2f, 0.2f, 0.8f};
 
 void initGL() {
-    vertexArrayObjects.push_back(0);
-    vertexArrayObjects.push_back(0);
-
     //////////////////////////////////////////////////////////////////////////////
     // Vertex positions
     //////////////////////////////////////////////////////////////////////////////
     // Define the positions for each of the three vertices of the triangle
-    const float positions[][9] = {{
+    const float positions[] = {
         //	 X      Y     Z
         0.0f, 0.5f, 1.0f, // v0
         -0.5f, -0.5f, 1.0f, // v1
-        0.5f, -0.5f, 1.0f  // v2
-    }, {
+        0.5f, -0.5f, 1.0f,  // v2
+
         //	 X      Y     Z
-        0.0f, 0.6f, 1.0f, // v0
+        -0.1f, 0.6f, 1.0f, // v0
+        -0.5f, 0.8f, 1.0f, // v1
+        -0.5f, 0.4f, 1.0f,  // v2
+
+        //	 X      Y     Z
+        0.1f, 0.6f, 1.0f, // v0
         0.5f, 0.8f, 1.0f, // v1
         0.5f, 0.4f, 1.0f  // v2
-    }};
+    };
+
     // Create a handle for the position vertex buffer object
     // See OpenGL Spec §2.9 Buffer Objects
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=54
-    GLuint positionBuffers[2];
+    GLuint positionBuffers[3];
 
-    for (int i = 0; i < 2; ++i) {
-        glGenBuffers(1, &positionBuffers[i]);
+    for (auto& positionBuffer : positionBuffers) {
+        glGenBuffers(1, &positionBuffer);
         // Set the newly created buffer as the current one
-        glBindBuffer(GL_ARRAY_BUFFER, positionBuffers[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
         // Send the vertex position data to the current buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(positions[i]), positions[i], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -63,17 +65,22 @@ void initGL() {
     // TASK 3: Change these colors to something more fun.
     //////////////////////////////////////////////////////////////////////////////
     // Define the colors for each of the three vertices of the triangle
-    const float colors[][9] = {{
+    const float colors[] = {
         //   R     G     B
         1.0f, 0.0f, 0.0f, // Red
         0.75f, 0.0f, 1.0f, // Purple
-        1.0f, 0.25f, 0.5f  // Pink
-    }, {
+        1.0f, 0.25f, 0.5f,  // Pink
+
         //   R     G     B
         1.0f, 0.0f, 0.0f, // Red
         1.0f, 0.5f, 0.0f, // Orange
-        1.0f, 1.0f, 0.0f  // Yellow
-    }};
+        1.0f, 1.0f, 0.0f,  // Yellow
+
+        //   R     G     B
+        1.0f, 0.0f, 0.0f, // Red
+        0.0f, 0.0f, 0.0f, // Black
+        1.0f, 1.0f, 1.0f  // White
+    };
 
     //////////////////////////////////////////////////////////////////////////////
     // Create a vertex array object and connect the vertex buffer objects to it
@@ -82,23 +89,26 @@ void initGL() {
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=64
     //////////////////////////////////////////////////////////////////////////////
 
-    for (int i = 0; i < vertexArrayObjects.size(); ++i) {
+    GLuint* vertexArrayObjects[] = {&vertexArrayObject_0, &vertexArrayObject_1};
+
+    for (int i = 0; i < 2; ++i) {
         // Create a handle for the vertex color buffer
         GLuint colorBuffer;
         glGenBuffers(1, &colorBuffer);
         // Set the newly created buffer as the current one
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
         // Send the vertex color data to the current buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(colors[i]), colors[i], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colors) - sizeof(float)*9*i, colors + 9*i, GL_STATIC_DRAW);
 
-        glGenVertexArrays(1, &vertexArrayObjects[i]);
+        glGenVertexArrays(1, vertexArrayObjects[i]);
         // Bind the vertex array object
         // The following calls will affect this vertex array object.
-        glBindVertexArray(vertexArrayObjects[i]);
+        glBindVertexArray(*vertexArrayObjects[i]);
         // Makes positionBuffer the current array buffer for subsequent calls.
         glBindBuffer(GL_ARRAY_BUFFER, positionBuffers[i]);
         // Attaches positionBuffer to vertexArrayObjects, in the 0th attribute location
-        glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0, (void*) (sizeof(float) * 9 * i));
         // Makes colorBuffer the current array buffer for subsequent calls.
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
         // Attaches colorBuffer to vertexArrayObjects, in the 1st attribute location
@@ -112,7 +122,7 @@ void initGL() {
     //		   object, and then by adding a triangle to an existing VAO.
     //////////////////////////////////////////////////////////////////////////////
 
-
+    // See above
 
     ///////////////////////////////////////////////////////////////////////////
     // Create shaders
@@ -203,11 +213,18 @@ void display() {
     // Shader Program
     glUseProgram(shaderProgram); // Set the shader program to use for this draw call
     // Bind the vertex array object that contains all the vertex data.
-    for (auto& vertexArrayObject : vertexArrayObjects) {
-        glBindVertexArray(vertexArrayObject);
-        // Submit triangles from currently bound vertex array object.
-        glDrawArrays(GL_TRIANGLES, 0, 3); // Render 1 triangle
-    }
+
+    glBindVertexArray(vertexArrayObject_0);
+    // Submit triangles from currently bound vertex array object.
+    glDrawArrays(GL_TRIANGLES, 0, 3); // Render 1 triangle
+
+    glBindVertexArray(vertexArrayObject_1);
+    // Submit triangles from currently bound vertex array object.
+    glDrawArrays(GL_TRIANGLES, 0, 3); // Render 1 triangle
+
+    glBindVertexArray(vertexArrayObject_1);
+    // Submit triangles from currently bound vertex array object.
+    glDrawArrays(GL_TRIANGLES, 3, 3); // Render 1 triangle
 
     glUseProgram(0); // "unsets" the current shader program. Not really necessary.
 }
