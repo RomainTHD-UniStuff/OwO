@@ -47,7 +47,7 @@ void initGL() {
     };
 
     // Create a handle for the position vertex buffer object
-    // See OpenGL Spec ง2.9 Buffer Objects
+    // See OpenGL Spec ยง2.9 Buffer Objects
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=54
     GLuint positionBuffer;
     glGenBuffers(1, &positionBuffer);
@@ -82,7 +82,7 @@ void initGL() {
     //////////////////////////////////////////////////////////////////////////////
     // Create a vertex array object and connect the vertex buffer objects to it
     //
-    // See OpenGL Spec ง2.10
+    // See OpenGL Spec ยง2.10
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=64
     //////////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +127,7 @@ void initGL() {
     // Create shaders
     ///////////////////////////////////////////////////////////////////////////
 
-    // See OpenGL spec ง2.20 http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=104&zoom=75
+    // See OpenGL spec ยง2.20 http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=104&zoom=75
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
