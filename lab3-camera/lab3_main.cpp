@@ -23,6 +23,8 @@ using std::max;
 int old_w = 1280;
 int old_h = 720;
 
+bool thirdPerson = true;
+
 struct PerspectiveParams {
     float fov;
     int w;
@@ -103,13 +105,21 @@ void display() {
     // Set up the view matrix
     // The view matrix defines where the viewer is looking
 
+    if (thirdPerson) {
+        cameraPosition = T[3];
+        cameraDirection = R[2];
+
+        mat4 pitch = rotate(-0.25f, normalize(cross(cameraDirection, worldUp)));
+        cameraDirection = vec3(pitch * vec4(cameraDirection, 0.0f));
+    }
+
     vec3 cameraRight = normalize(cross(cameraDirection, worldUp));
     vec3 cameraUp = normalize(cross(cameraRight, cameraDirection));
 
     mat3 cameraBaseVectorsWorldSpace(cameraRight, cameraUp, -cameraDirection);
 
     mat4 cameraRotation = mat4(transpose(cameraBaseVectorsWorldSpace));
-    mat4 viewMatrix = cameraRotation * translate(-cameraPosition);
+    mat4 viewMatrix = translate(vec3(0.f, -3.f, -10.f)) * cameraRotation * translate(-cameraPosition);
 
     // Setup the projection matrix
     if (w != old_w || h != old_h) {
@@ -156,6 +166,7 @@ void gui() {
     ImGui::Text("Aspect Ratio: %.2f", float(pp.w) / float(pp.h));
     ImGui::SliderFloat("Near Plane", &pp.near, 0.1f, 300.0f, "%.2f", 2.f);
     ImGui::SliderFloat("Far Plane", &pp.far, 0.1f, 300.0f, "%.2f", 2.f);
+    ImGui::Checkbox("3rd person", &thirdPerson);
     if (ImGui::Button("Reset")) {
         pp.fov = 45.0f;
         pp.w = 1280;
@@ -232,11 +243,6 @@ int main(int argc, char* argv[]) {
                 // More info at https://wiki.libsdl.org/SDL_MouseMotionEvent
                 int delta_x = event.motion.x - g_prevMouseCoords.x;
                 int delta_y = event.motion.y - g_prevMouseCoords.y;
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    printf("Mouse motion while left button down (%i, %i)\n", event.motion.x, event.motion.y);
-                }
-                g_prevMouseCoords.x = event.motion.x;
-                g_prevMouseCoords.y = event.motion.y;
 
                 if (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) {
                     float rotationSpeed = 0.005f;
@@ -244,6 +250,9 @@ int main(int argc, char* argv[]) {
                     mat4 pitch = rotate(rotationSpeed * -delta_y, normalize(cross(cameraDirection, worldUp)));
                     cameraDirection = vec3(pitch * yaw * vec4(cameraDirection, 0.0f));
                 }
+
+                g_prevMouseCoords.x = event.motion.x;
+                g_prevMouseCoords.y = event.motion.y;
             }
         }
 
