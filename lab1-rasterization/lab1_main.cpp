@@ -49,15 +49,12 @@ void initGL() {
     // Create a handle for the position vertex buffer object
     // See OpenGL Spec §2.9 Buffer Objects
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=54
-    GLuint positionBuffers[3];
-
-    for (auto& positionBuffer : positionBuffers) {
-        glGenBuffers(1, &positionBuffer);
-        // Set the newly created buffer as the current one
-        glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-        // Send the vertex position data to the current buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-    }
+    GLuint positionBuffer;
+    glGenBuffers(1, &positionBuffer);
+    // Set the newly created buffer as the current one
+    glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+    // Send the vertex position data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 
     //////////////////////////////////////////////////////////////////////////////
     // Vertex colors
@@ -77,8 +74,8 @@ void initGL() {
         1.0f, 1.0f, 0.0f,  // Yellow
 
         //   R     G     B
-        1.0f, 0.0f, 0.0f, // Red
-        0.0f, 0.0f, 0.0f, // Black
+        0.0f, 1.0f, 1.0f, // Red
+        1.0f, 1.0f, 1.0f, // Black
         1.0f, 1.0f, 1.0f  // White
     };
 
@@ -89,30 +86,32 @@ void initGL() {
     // - http://www.cse.chalmers.se/edu/course/TDA361/glspec30.20080923.pdf#page=64
     //////////////////////////////////////////////////////////////////////////////
 
+    // Create a handle for the vertex color buffer
+    GLuint colorBuffer;
+    glGenBuffers(1, &colorBuffer);
+    // Set the newly created buffer as the current one
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    // Send the vertex color data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
     GLuint* vertexArrayObjects[] = {&vertexArrayObject_0, &vertexArrayObject_1};
 
     for (int i = 0; i < 2; ++i) {
-        // Create a handle for the vertex color buffer
-        GLuint colorBuffer;
-        glGenBuffers(1, &colorBuffer);
-        // Set the newly created buffer as the current one
-        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-        // Send the vertex color data to the current buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(colors) - sizeof(float)*9*i, colors + 9*i, GL_STATIC_DRAW);
-
         glGenVertexArrays(1, vertexArrayObjects[i]);
         // Bind the vertex array object
         // The following calls will affect this vertex array object.
         glBindVertexArray(*vertexArrayObjects[i]);
         // Makes positionBuffer the current array buffer for subsequent calls.
-        glBindBuffer(GL_ARRAY_BUFFER, positionBuffers[i]);
-        // Attaches positionBuffer to vertexArrayObjects, in the 0th attribute location
 
+        glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+        // Attaches positionBuffer to vertexArrayObjects, in the 0th attribute location
         glVertexAttribPointer(0, 3, GL_FLOAT, false /*normalized*/, 0, (void*) (sizeof(float) * 9 * i));
+
         // Makes colorBuffer the current array buffer for subsequent calls.
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
         // Attaches colorBuffer to vertexArrayObjects, in the 1st attribute location
-        glVertexAttribPointer(1, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false /*normalized*/, 0 /*stride*/, (void*) (sizeof(float) * 9 * i));
+
         glEnableVertexAttribArray(0); // Enable the vertex position attribute
         glEnableVertexAttribArray(1); // Enable the vertex color attribute
     }
@@ -219,11 +218,7 @@ void display() {
     glDrawArrays(GL_TRIANGLES, 0, 3); // Render 1 triangle
 
     glBindVertexArray(vertexArrayObject_1);
-    // Submit triangles from currently bound vertex array object.
     glDrawArrays(GL_TRIANGLES, 0, 3); // Render 1 triangle
-
-    glBindVertexArray(vertexArrayObject_1);
-    // Submit triangles from currently bound vertex array object.
     glDrawArrays(GL_TRIANGLES, 3, 3); // Render 1 triangle
 
     glUseProgram(0); // "unsets" the current shader program. Not really necessary.
