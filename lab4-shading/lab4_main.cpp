@@ -82,12 +82,14 @@ labhelper::Model* sphereModel = nullptr;
 void loadShaders(bool is_reload) {
     GLuint shader = labhelper::loadShaderProgram("../lab4-shading/shading.vert",
                                                  "../lab4-shading/shading.frag", is_reload);
-    if (shader != 0)
+    if (shader != 0) {
         shaderProgram = shader;
+    }
     shader = labhelper::loadShaderProgram("../lab4-shading/background.vert",
                                           "../lab4-shading/background.frag", is_reload);
-    if (shader != 0)
+    if (shader != 0) {
         backgroundProgram = shader;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -207,7 +209,7 @@ void debugDrawLight(const glm::mat4& viewMatrix,
     labhelper::render(sphereModel);
 }
 
-void display(void) {
+void display() {
     ///////////////////////////////////////////////////////////////////////////
     // Set up OpenGL stuff
     ///////////////////////////////////////////////////////////////////////////
@@ -315,10 +317,10 @@ bool handleEvents() {
             g_prevMouseCoords.y = y;
         }
 
-        if (!(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+        if (!(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT))) {
             g_isMouseDragging = false;
         }
-        if (!(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_RIGHT))) {
+        if (!(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_RIGHT))) {
             g_isMouseRightDragging = false;
         }
 
