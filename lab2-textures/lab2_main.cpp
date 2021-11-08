@@ -30,7 +30,7 @@ GLuint shaderProgram;
 
 // The vertexArrayObject here will hold the pointers to
 // the vertex data (in roadPositionBuffer) and color data per vertex (in colorBuffer)
-GLuint vertexArrayObject;
+GLuint roadVertexArrayObject, explosionVertexArrayObject;
 
 GLuint roadPositionBuffer,
     roadIndexBuffer,
@@ -43,6 +43,14 @@ GLuint explosionPositionBuffer,
     explosionTexture;
 
 void initRoad() {
+    ///////////////////////////////////////////////////////////////////////////
+    // Create the vertex array object
+    ///////////////////////////////////////////////////////////////////////////
+    // Create a handle for the vertex array object
+    glGenVertexArrays(1, &roadVertexArrayObject);
+    // Set it as current, i.e., related calls will affect this object
+    glBindVertexArray(roadVertexArrayObject);
+
     ///////////////////////////////////////////////////////////////////////////
     // Create the positions buffer object
     ///////////////////////////////////////////////////////////////////////////
@@ -116,12 +124,20 @@ void initRoad() {
 }
 
 void initExplosion() {
+    ///////////////////////////////////////////////////////////////////////////
+    // Create the vertex array object
+    ///////////////////////////////////////////////////////////////////////////
+    // Create a handle for the vertex array object
+    glGenVertexArrays(1, &explosionVertexArrayObject);
+    // Set it as current, i.e., related calls will affect this object
+    glBindVertexArray(explosionVertexArrayObject);
+
     const float positions[] = {
         // X      Y       Z
-        -1.0f, -1.0f, -10.0f,  // v0
-        -1.0f, 1.0f, -10.0f, // v1
-        1.0f, 1.0f, -10.0f, // v2
-        1.0f, -1.0f, -10.0f   // v3
+        -1.0f, 0.0f, -5.0f,  // v0
+        -1.0f, 2.0f, -5.0f, // v1
+        1.0f, 2.0f, -5.0f, // v2
+        1.0f, 0.0f, -5.0f   // v3
     };
 
     // Create a handle for the vertex position buffer
@@ -175,13 +191,8 @@ void initExplosion() {
 }
 
 void initGL() {
-    ///////////////////////////////////////////////////////////////////////////
-    // Create the vertex array object
-    ///////////////////////////////////////////////////////////////////////////
-    // Create a handle for the vertex array object
-    glGenVertexArrays(2, &vertexArrayObject); // FIXME: ?
-    // Set it as current, i.e., related calls will affect this object
-    glBindVertexArray(vertexArrayObject);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     initRoad();
     initExplosion();
@@ -193,10 +204,6 @@ void initGL() {
 }
 
 void display() {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mini);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
-
     // The viewport determines how many pixels we are rasterizing to
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
@@ -231,13 +238,17 @@ void display() {
 
     // >>> @task 3.1
 
-    glBindVertexArray(vertexArrayObject);
-
     glActiveTexture(GL_TEXTURE0);
+
+    glBindVertexArray(roadVertexArrayObject);
     glBindTexture(GL_TEXTURE_2D, roadTexture);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-    glActiveTexture(GL_TEXTURE0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mini);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+
+    glBindVertexArray(explosionVertexArrayObject);
     glBindTexture(GL_TEXTURE_2D, explosionTexture);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
