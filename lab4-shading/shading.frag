@@ -82,11 +82,34 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     // Task 2 - Calculate the Torrance Sparrow BRDF and return the light
     //          reflected from that instead
     ///////////////////////////////////////////////////////////////////////////
+
+    vec3 wh = normalize(wi + wo);
+
+    float R = material_fresnel;
+    // float F = R + (1. - R) * pow(1. - dot(wh, wi), 5.);
+    float F = R; // FIXME: NaN everywhere
+
+    float s = material_shininess;
+    float D = (s + 2.) / (2. * PI) * pow(dot(n, wh), s);
+
+    float G = min(1., min(2. * dot(n, wh) * dot(n, wo) / dot(wo, wh), 2. * dot(n, wh) * dot(n, wi) / dot(wo, wh)));
+
+    float brdf = F * D * G / (4. * dot(n, wo) * dot(n, wi));
+
     ///////////////////////////////////////////////////////////////////////////
     // Task 3 - Make your shader respect the parameters of our material model.
     ///////////////////////////////////////////////////////////////////////////
 
-    return diffuse_term;
+    vec3 dielectric_term = brdf * dot(n, wi) * Li + (1 - F) * diffuse_term;
+
+    float m = material_metalness;
+    vec3 metal_term = brdf * material_color * dot(n, wi) * Li;
+    vec3 microfacet_term = m * metal_term + (1 - m) * dielectric_term;
+
+    float r = material_reflectivity;
+
+    // return brdf * dot(n, wi) * Li;
+    return r * microfacet_term + (1 - r) * diffuse_term;
 }
 
 vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
