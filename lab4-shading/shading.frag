@@ -66,8 +66,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     float d = distance(viewSpaceLightPosition, viewSpacePosition);
     vec3 Li = point_light_intensity_multiplier * point_light_color * 1/(d*d);
 
-    // FIXME: Is it tho
-    vec3 wi = wo;
+    vec3 wi = viewSpaceLightPosition - viewSpacePosition;
 
     if (dot(n, wi) <= 0) {
         return vec3(0, 0, 0);
@@ -77,7 +76,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     // Task 1.3 - Calculate the diffuse term and return that as the result
     ///////////////////////////////////////////////////////////////////////////
 
-    vec3 diffuse_term = material_color * 1.0 / PI * abs(dot(n, wi)) * Li;
+    vec3 diffuse_term = direct_illum * 1.0 / PI * abs(dot(n, wi)) * Li;
 
     ///////////////////////////////////////////////////////////////////////////
     // Task 2 - Calculate the Torrance Sparrow BRDF and return the light
@@ -87,7 +86,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     // Task 3 - Make your shader respect the parameters of our material model.
     ///////////////////////////////////////////////////////////////////////////
 
-    return direct_illum;
+    return diffuse_term;
 }
 
 vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
@@ -111,9 +110,8 @@ void main() {
     // Task 1.1 - Fill in the outgoing direction, wo, and the normal, n. Both
     //            shall be normalized vectors in view-space.
     ///////////////////////////////////////////////////////////////////////////
-    vec3 wo = viewSpaceLightPosition - viewSpacePosition; // FIXME: Wrong, maybe use `reflect` ?
-    // vec3 wo = normalize(reflect(viewSpaceLightPosition - viewSpacePosition, viewSpaceNormal));
-    vec3 n = viewSpaceNormal;
+    vec3 n = normalize(viewSpaceNormal);
+    vec3 wo = normalize(-viewSpacePosition); // FIXME: Wrong, maybe use `reflect` ?
 
     vec3 base_color = material_color;
     if (has_color_texture == 1) {
@@ -133,7 +131,7 @@ void main() {
     ///////////////////////////////////////////////////////////////////////////
     // Task 1.4 - Make glowy things glow!
     ///////////////////////////////////////////////////////////////////////////
-    vec3 emission_term = vec3(0.0);
+    vec3 emission_term = material_emission * material_color;
 
     vec3 final_color = direct_illumination_term + indirect_illumination_term + emission_term;
 
