@@ -95,6 +95,8 @@ void loadShaders(bool is_reload) {
     }
 }
 
+GLuint backgroundPositionBuffer, backgroundTexBuffer, backgroundIndexBuffer;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Create buffer to render a full screen quad
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,6 +107,61 @@ void initFullScreenQuad() {
     if (fullScreenQuadVAO == 0) {
         // >>> @task 4.1
         // ...
+
+        ///////////////////////////////////////////////////////////////////////////
+        // Create the vertex array object
+        ///////////////////////////////////////////////////////////////////////////
+        // Create a handle for the vertex array object
+        glGenVertexArrays(1, &fullScreenQuadVAO);
+        // Set it as current, i.e., related calls will affect this object
+        glBindVertexArray(fullScreenQuadVAO);
+
+        float texCoords[] = {
+            0.0f, 0.0f, // (u,v) for v0
+            0.0f, 1.0f, // (u,v) for v1
+            1.0f, 1.0f, // (u,v) for v2
+            1.0f, 0.0f // (u,v) for v3
+        };
+
+        // FIXME: Shouldn't we discard this array ?
+        const float positions[] = {
+            // X      Y       Z
+            -10.0f, 0.0f, 0.f,  // v0
+            -10.0f, 10.0f, 0.f, // v1
+            10.0f, 10.0f, 0.f, // v2
+            10.0f, 0.0f, 0.f   // v3
+        };
+
+        // Create a handle for the vertex position buffer
+        glGenBuffers(1, &backgroundPositionBuffer);
+        // Set the newly created buffer as the current one
+        glBindBuffer(GL_ARRAY_BUFFER, backgroundPositionBuffer);
+        // Send the vertex position data to the current buffer
+        glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+
+        // FIXME: Size = 2 or 3 ?
+        glVertexAttribPointer(0, 2, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
+        // Enable the attribute
+
+        glEnableVertexAttribArray(0);
+
+
+
+        glGenBuffers(1, &backgroundTexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, backgroundTexBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, false/*normalized*/, 0/*stride*/, nullptr/*offset*/);
+        glEnableVertexAttribArray(2);
+
+        const int indices[] = {
+            0, 1, 3, // Triangle 1
+            1, 2, 3  // Triangle 2
+        };
+
+        glGenBuffers(1, &backgroundIndexBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, backgroundIndexBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     }
 }
 
@@ -117,6 +174,20 @@ void drawFullScreenQuad() {
     ///////////////////////////////////////////////////////////////////////////
     // >>> @task 4.2
     // ...
+
+    GLboolean depth_test_enabled;
+    glGetBooleanv(GL_DEPTH_TEST, &depth_test_enabled);
+    glDisable(GL_DEPTH_TEST);
+
+    glActiveTexture(GL_TEXTURE0);
+
+    glBindVertexArray(fullScreenQuadVAO);
+    glBindTexture(GL_TEXTURE_2D, environmentMap);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+    if (depth_test_enabled) {
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 
@@ -251,6 +322,12 @@ void display() {
     // Task 4.3 - Render a fullscreen quad, to generate the background from the
     //            environment map.
     ///////////////////////////////////////////////////////////////////////////
+
+    glUseProgram(backgroundProgram);
+    labhelper::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
+    labhelper::setUniformSlow(backgroundProgram, "inv_PV", inverse(projectionMatrix * viewMatrix));
+    labhelper::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
+    drawFullScreenQuad();
 
     ///////////////////////////////////////////////////////////////////////////
     // Render the .obj models
