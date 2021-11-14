@@ -66,7 +66,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     float d = distance(viewSpaceLightPosition, viewSpacePosition);
     vec3 Li = point_light_intensity_multiplier * point_light_color * 1/(d*d);
 
-    vec3 wi = viewSpaceLightPosition - viewSpacePosition;
+    vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
 
     if (dot(n, wi) <= 0) {
         return vec3(0, 0, 0);
@@ -86,8 +86,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     vec3 wh = normalize(wi + wo);
 
     float R = material_fresnel;
-    // float F = R + (1. - R) * pow(1. - dot(wh, wi), 5.);
-    float F = R; // FIXME: NaN everywhere
+    float F = R + (1. - R) * pow(1. - dot(wh, wi), 5.);
 
     float s = material_shininess;
     float D = (s + 2.) / (2. * PI) * pow(dot(n, wh), s);
@@ -108,7 +107,6 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
 
     float r = material_reflectivity;
 
-    // return brdf * dot(n, wi) * Li;
     return r * microfacet_term + (1 - r) * diffuse_term;
 }
 
@@ -134,7 +132,7 @@ void main() {
     //            shall be normalized vectors in view-space.
     ///////////////////////////////////////////////////////////////////////////
     vec3 n = normalize(viewSpaceNormal);
-    vec3 wo = normalize(-viewSpacePosition); // FIXME: Wrong, maybe use `reflect` ?
+    vec3 wo = normalize(-viewSpacePosition);
 
     vec3 base_color = material_color;
     if (has_color_texture == 1) {
