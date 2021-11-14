@@ -142,6 +142,25 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
     //          direction and calculate the dielectric and metal terms.
     ///////////////////////////////////////////////////////////////////////////
 
+    float s = material_shininess;
+    float roughness = sqrt(sqrt(2. / (s + 2.)));
+    vec3 Li = environment_multiplier * textureLod(reflectionMap, lookup, roughness * 7.0).xyz;
+
+    // FIXME: Wrong ?
+    vec3 wi = reflect(normalize(viewSpaceLightPosition - viewSpacePosition), vec3(dir));
+    vec3 wh = normalize(wi + wo);
+    float R = material_fresnel;
+    float F = R + (1. - R) * pow(1. - dot(wh, wi), 5.);
+
+    vec3 dielectric_term = F * Li + (1. - F) * diffuse_term;
+    vec3 metal_term = F * material_color * Li;
+
+    float m = material_metalness;
+    vec3 microfacet_term = m * metal_term + (1 - m) * dielectric_term;
+
+    float r = material_reflectivity;
+    indirect_illum = r * microfacet_term + (1 - r) * diffuse_term;
+
     return indirect_illum;
 }
 
