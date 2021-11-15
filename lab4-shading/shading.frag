@@ -68,8 +68,8 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
 
     vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
 
-    if (dot(n, wi) <= 0) {
-        return vec3(0, 0, 0);
+    if (dot(n, wi) <= 0.) {
+        return vec3(0., 0., 0.);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     float F = R + (1. - R) * pow(1. - dot(wh, wi), 5.);
 
     float s = material_shininess;
-    float D = (s + 2.) / (2. * PI) * pow(dot(n, wh), s);
+    float D = (s + 2.) / (2. * PI) * pow(max(0.0001, dot(n, wh)), s);
 
     float G = min(1., min(2. * dot(n, wh) * dot(n, wo) / dot(wo, wh), 2. * dot(n, wh) * dot(n, wi) / dot(wo, wh)));
 
@@ -117,7 +117,6 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
     //          the diffuse reflection
     ///////////////////////////////////////////////////////////////////////////
 
-    // FIXME: Right cast ?
     vec4 dir = viewInverse * vec4(n.x, n.y, n.z, 0.);
 
     // Calculate the spherical coordinates of the direction
@@ -130,7 +129,6 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
     // Use these to lookup the color in the environment map
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
 
-    // FIXME: Right cast ?
     vec4 irradiance = texture(irradianceMap, lookup);
 
     vec3 diffuse_term = material_color * (1.0 / PI) * vec3(irradiance);
@@ -146,7 +144,6 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 base_color) {
     float roughness = sqrt(sqrt(2. / (s + 2.)));
     vec3 Li = environment_multiplier * textureLod(reflectionMap, lookup, roughness * 7.0).xyz;
 
-    // FIXME: Wrong ?
     vec3 wi = reflect(normalize(viewSpaceLightPosition - viewSpacePosition), vec3(dir));
     vec3 wh = normalize(wi + wo);
     float R = material_fresnel;

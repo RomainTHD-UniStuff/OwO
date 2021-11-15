@@ -122,7 +122,6 @@ void initFullScreenQuad() {
             1.0f, 0.0f // (u,v) for v3
         };
 
-        // FIXME: Shouldn't we discard this array ?
         const float positions[] = {
             // X      Y       Z
             -10.0f, 0.0f, 0.f,  // v0
@@ -138,12 +137,10 @@ void initFullScreenQuad() {
         // Send the vertex position data to the current buffer
         glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 
-        // FIXME: Size = 2 or 3 ?
         glVertexAttribPointer(0, 2, GL_FLOAT, false /*normalized*/, 0 /*stride*/, nullptr /*offset*/);
         // Enable the attribute
 
         glEnableVertexAttribArray(0);
-
 
 
         glGenBuffers(1, &backgroundTexBuffer);
