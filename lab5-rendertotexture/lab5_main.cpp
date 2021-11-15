@@ -30,7 +30,7 @@ using std::max;
 SDL_Window* g_window = nullptr;
 static float currentTime = 0.0f;
 static float deltaTime = 0.0f;
-bool showUI = false;
+bool showUI = true;
 
 // Mouse input
 ivec2 g_prevMouseCoords = {-1, -1};
@@ -357,6 +357,9 @@ void display() {
     glUseProgram(postFxShader);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+    labhelper::setUniformSlow(postFxShader, "time", currentTime);
+    labhelper::setUniformSlow(postFxShader, "currentEffect", currentEffect);
+    labhelper::setUniformSlow(postFxShader, "filterSize", filterSizes[filterSize - 1]);
     labhelper::drawFullScreenQuad();
 
     glUseProgram(0);

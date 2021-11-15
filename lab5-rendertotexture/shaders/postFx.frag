@@ -28,6 +28,11 @@ vec4 textureRect(in sampler2D tex, vec2 rectangleCoord) {
 vec2 mushrooms(vec2 inCoord);
 
 /**
+ * Mosaic
+ */
+vec2 mosaic(vec2 coord);
+
+/**
  * Samples a region of the frame buffer using gaussian filter weights to blur the image
  * as the kernel width is not that large, it doesnt produce a very large effect. Making it larger
  * is both tedious and expensive, for real time purposes a separable blur is preferable, but this
@@ -70,7 +75,7 @@ void main() {
         fragmentColor = vec4(toSepiaTone(blur(mushrooms(gl_FragCoord.xy))), 1.0);
         break;
         case 6:
-        fragmentColor = vec4(0.0);// place holder
+        fragmentColor = textureRect(frameBufferTexture, mosaic(gl_FragCoord.xy));
         break;
         case 7:
         fragmentColor = vec4(0.0);// place holder
@@ -104,7 +109,13 @@ vec3 toSepiaTone(vec3 rgbSample) {
 }
 
 vec2 mushrooms(vec2 inCoord) {
-    return inCoord + vec2(sin(time * 4.3127 + inCoord.y / 9.0) * 15.0, 0.0);
+    // return inCoord + vec2(sin(time * 4.3127 + inCoord.y / 9.0) * 15.0, 0.0);
+    return inCoord + vec2(sin(time * 4.3127 + inCoord.y / 9.0) * 100.0, 0.0);
+}
+
+vec2 mosaic(vec2 coord) {
+    const int mosaicWidth = 50;
+    return vec2(floor(coord.x / mosaicWidth) * mosaicWidth + 1., floor(coord.y / mosaicWidth) * mosaicWidth + 1.);
 }
 
 vec3 blur(vec2 coord) {
