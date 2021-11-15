@@ -102,9 +102,9 @@ struct FboInfo;
 std::vector<FboInfo> fboList;
 
 struct FboInfo {
-    GLuint framebufferId;
-    GLuint colorTextureTarget;
-    GLuint depthBuffer;
+    GLuint framebufferId{};
+    GLuint colorTextureTarget{};
+    GLuint depthBuffer{};
     int width;
     int height;
     bool isComplete;
@@ -132,6 +132,15 @@ struct FboInfo {
         ///////////////////////////////////////////////////////////////////////
         // >>> @task 1
         //...
+        glGenFramebuffers(1, &framebufferId);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
+
+        // bind the texture as color attachment 0 (to the currently bound framebuffer)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureTarget, 0);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+        // bind the texture as depth attachment (to the currently bound framebuffer)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
 
         // check if framebuffer is complete
         isComplete = checkFramebufferComplete();
@@ -142,8 +151,13 @@ struct FboInfo {
 
     // if no resolution provided
     FboInfo()
-        : isComplete(false), framebufferId(UINT32_MAX), colorTextureTarget(UINT32_MAX), depthBuffer(UINT32_MAX),
-          width(0), height(0) {};
+        :
+        isComplete(false),
+        framebufferId(UINT32_MAX),
+        colorTextureTarget(UINT32_MAX),
+        depthBuffer(UINT32_MAX),
+        width(0),
+        height(0) {};
 
     void resize(int w, int h) {
         width = w;
@@ -158,7 +172,7 @@ struct FboInfo {
                      nullptr);
     }
 
-    bool checkFramebufferComplete(void) {
+    bool checkFramebufferComplete() const {
         // Check that our FBO is correctly set up, this can fail if we have
         // incompatible formats in a buffer, or for example if we specify an
         // invalid drawbuffer, among things.
@@ -198,8 +212,10 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////////
     const int roughnesses = 8;
     std::vector<std::string> filenames;
-    for (int i = 0; i < roughnesses; i++)
+    filenames.reserve(roughnesses);
+    for (int i = 0; i < roughnesses; i++) {
         filenames.push_back("../scenes/envmaps/" + envmap_base_name + "_dl_" + std::to_string(i) + ".hdr");
+    }
 
     reflectionMap = labhelper::loadHdrMipmapTexture(filenames);
     environmentMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
@@ -210,6 +226,10 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////////
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
+    const int numFbos = 5;
+    for (int i = 0; i < numFbos; i++) {
+        fboList.emplace_back(w, h);
+    }
 }
 
 void drawScene(const mat4& view, const mat4& projection) {
@@ -270,9 +290,10 @@ void display() {
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
 
-    for (int i = 0; i < fboList.size(); i++) {
-        if (fboList[i].width != w || fboList[i].height != h)
-            fboList[i].resize(w, h);
+    for (auto& fbo : fboList) {
+        if (fbo.width != w || fbo.height != h) {
+            fbo.resize(w, h);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -299,11 +320,24 @@ void display() {
     ///////////////////////////////////////////////////////////////////////////
     // >>> @task 2
     // ...
+    FboInfo& securityFB = fboList[0];
+    glBindFramebuffer(GL_FRAMEBUFFER, securityFB.framebufferId);
+    glViewport(0, 0, securityFB.width, securityFB.height);
+    glClearColor(0.2, 0.2, 0.8, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    drawScene(securityCamViewMatrix, securityCamProjectionMatrix); // using both shaderProgram and backgroundProgram
+
+    labhelper::Material& screen = landingpadModel->m_materials[8];
+    screen.m_emission_texture.gl_id = securityFB.colorTextureTarget;
 
     ///////////////////////////////////////////////////////////////////////////
     // draw scene from camera
     ///////////////////////////////////////////////////////////////////////////
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); // to be replaced with another framebuffer when doing post processing
+    // FboInfo& cameraFB = fboList[1];
+    // glBindFramebuffer(GL_FRAMEBUFFER, cameraFB.framebufferId);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // to be replaced with another framebuffer when doing post processing
     glViewport(0, 0, w, h);
     glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -317,13 +351,22 @@ void display() {
     // Post processing pass(es)
     ///////////////////////////////////////////////////////////////////////////
 
+    /*
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, w, h);
+    glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUseProgram(postFxShader);
+    glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+    */
 
     glUseProgram(0);
 
     CHECK_GL_ERROR();
 }
 
-bool handleEvents(void) {
+bool handleEvents() {
     // check events (keyboard among other)
     SDL_Event event;
     bool quitEvent = false;
@@ -348,7 +391,7 @@ bool handleEvents(void) {
             g_prevMouseCoords.y = y;
         }
 
-        uint32_t mouseState = SDL_GetMouseState(NULL, NULL);
+        uint32_t mouseState = SDL_GetMouseState(nullptr, nullptr);
         if (!(mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && !(mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))) {
             g_isMouseDragging = false;
         }
