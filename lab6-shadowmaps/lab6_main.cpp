@@ -177,8 +177,12 @@ void drawScene(GLuint currentShaderProgram,
     labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
                               normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
     labhelper::setUniformSlow(currentShaderProgram, "spotOuterAngle", std::cos(radians(outerSpotlightAngle)));
-
-
+    mat4 lightMatrix = translate(vec3(0.5f))
+                       * scale(vec3(0.5f))
+                       * lightProjectionMatrix
+                       * lightViewMatrix
+                       * inverse(viewMatrix);
+    labhelper::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
 
     // Environment
     labhelper::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
@@ -242,9 +246,34 @@ void display() {
     ///////////////////////////////////////////////////////////////////////////
     // >>> @task 1
 
+    if (shadowMapFB.width != shadowMapResolution || shadowMapFB.height != shadowMapResolution) {
+        shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Draw Shadow Map
     ///////////////////////////////////////////////////////////////////////////
+
+    if (usePolygonOffset) {
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(polygonOffset_factor, polygonOffset_units);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFB.framebufferId);
+    glViewport(0, 0, shadowMapFB.width, shadowMapFB.height);
+    glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    drawScene(simpleShaderProgram, lightViewMatrix, lightProjMatrix, lightViewMatrix, lightProjMatrix);
+
+    labhelper::Material& screen = landingpadModel->m_materials[8];
+    screen.m_emission_texture.gl_id = shadowMapFB.colorTextureTarget;
+
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
+
+    if (usePolygonOffset) {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Draw from camera

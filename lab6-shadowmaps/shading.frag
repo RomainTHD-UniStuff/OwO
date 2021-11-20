@@ -23,6 +23,7 @@ layout(binding = 6) uniform sampler2D environmentMap;
 layout(binding = 7) uniform sampler2D irradianceMap;
 layout(binding = 8) uniform sampler2D reflectionMap;
 uniform float environment_multiplier;
+layout(binding = 10) uniform sampler2D shadowMapTex;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Light source
@@ -41,12 +42,14 @@ uniform float point_light_intensity_multiplier = 50.0;
 in vec2 texCoord;
 in vec3 viewSpaceNormal;
 in vec3 viewSpacePosition;
+in vec4 shadowMapCoord;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Input uniform variables
 ///////////////////////////////////////////////////////////////////////////////
 uniform mat4 viewInverse;
 uniform vec3 viewSpaceLightPosition;
+uniform mat4 lightMatrix;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output color
@@ -131,9 +134,10 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n) {
 }
 
 void main() {
-    float visibility = 1.0;
+    vec4 shadowMapCoord = lightMatrix * vec4(viewSpacePosition, 1.f);
+    float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
+    float visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
     float attenuation = 1.0;
-
 
     vec3 wo = -normalize(viewSpacePosition);
     vec3 n = normalize(viewSpaceNormal);
