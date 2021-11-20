@@ -8,11 +8,12 @@ FboInfo::FboInfo() :
     colorTextureTarget(UINT32_MAX),
     depthBuffer(UINT32_MAX),
     width(0),
-    height(0) {};
+    height(0) {}
 
-FboInfo::FboInfo(int w, int h) : FboInfo() {
+FboInfo::FboInfo(int w, int h) :
+    FboInfo() {
     resize(w, h);
-};
+}
 
 void FboInfo::resize(int w, int h) {
     width = w;
@@ -72,7 +73,7 @@ void FboInfo::resize(int w, int h) {
     }
 }
 
-bool FboInfo::checkFramebufferComplete(void) {
+bool FboInfo::checkFramebufferComplete() const {
     // Check that our FBO is correctly set up, this can fail if we have
     // incompatible formats in a buffer, or for example if we specify an
     // invalid drawbuffer, among things.

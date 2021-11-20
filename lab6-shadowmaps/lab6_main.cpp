@@ -1,5 +1,3 @@
-
-
 #include <GL/glew.h>
 #include <cmath>
 #include <cstdlib>
@@ -28,7 +26,7 @@ using std::max;
 SDL_Window* g_window = nullptr;
 static float currentTime = 0.0f;
 static float deltaTime = 0.0f;
-bool showUI = false;
+bool showUI = true;
 
 // Mouse input
 ivec2 g_prevMouseCoords = {-1, -1};
@@ -126,8 +124,10 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////
     const int roughnesses = 8;
     std::vector<std::string> filenames;
-    for (int i = 0; i < roughnesses; i++)
+    filenames.reserve(roughnesses);
+    for (int i = 0; i < roughnesses; i++) {
         filenames.push_back("../scenes/envmaps/" + envmap_base_name + "_dl_" + std::to_string(i) + ".hdr");
+    }
 
     reflectionMap = labhelper::loadHdrMipmapTexture(filenames);
     environmentMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
@@ -207,7 +207,7 @@ void drawScene(GLuint currentShaderProgram,
 }
 
 
-void display(void) {
+void display() {
     int w, h;
     SDL_GetWindowSize(g_window, &w, &h);
 
@@ -259,10 +259,10 @@ void display(void) {
     debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
 
 
-    CHECK_GL_ERROR();
+    CHECK_GL_ERROR()
 }
 
-bool handleEvents(void) {
+bool handleEvents() {
     // check events (keyboard among other)
     SDL_Event event;
     bool quitEvent = false;

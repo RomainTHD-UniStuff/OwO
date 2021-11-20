@@ -15,5 +15,5 @@ public:
 
     void resize(int w, int h);
 
-    bool checkFramebufferComplete(void);
+    bool checkFramebufferComplete() const;
 };
