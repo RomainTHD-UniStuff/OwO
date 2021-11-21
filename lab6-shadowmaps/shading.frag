@@ -23,7 +23,8 @@ layout(binding = 6) uniform sampler2D environmentMap;
 layout(binding = 7) uniform sampler2D irradianceMap;
 layout(binding = 8) uniform sampler2D reflectionMap;
 uniform float environment_multiplier;
-layout(binding = 10) uniform sampler2D shadowMapTex;
+// layout(binding = 10) uniform sampler2D shadowMapTex;
+layout(binding = 10) uniform sampler2DShadow shadowMapTex;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Light source
@@ -49,7 +50,9 @@ in vec4 shadowMapCoord;
 ///////////////////////////////////////////////////////////////////////////////
 uniform mat4 viewInverse;
 uniform vec3 viewSpaceLightPosition;
-uniform mat4 lightMatrix;
+uniform vec3 viewSpaceLightDir;
+uniform float spotOuterAngle;
+uniform float spotInnerAngle;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output color
@@ -134,13 +137,21 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n) {
 }
 
 void main() {
-    vec4 shadowMapCoord = lightMatrix * vec4(viewSpacePosition, 1.f);
-    float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
-    float visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
+    // float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
+    // float visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
+    float visibility = textureProj(shadowMapTex, shadowMapCoord);
     float attenuation = 1.0;
 
     vec3 wo = -normalize(viewSpacePosition);
     vec3 n = normalize(viewSpaceNormal);
+
+    vec3 posToLight = normalize(viewSpaceLightPosition - viewSpacePosition);
+    float cosAngle = dot(posToLight, -viewSpaceLightDir);
+
+    // Spotlight with hard border:
+    // float spotAttenuation = (cosAngle > spotOuterAngle) ? 1.0 : 0.0;
+    float spotAttenuation = smoothstep(spotOuterAngle, spotInnerAngle, cosAngle);
+    visibility *= spotAttenuation;
 
     // Direct illumination
     vec3 direct_illumination_term = visibility * calculateDirectIllumiunation(wo, n, material_color);

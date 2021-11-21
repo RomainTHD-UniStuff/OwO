@@ -72,10 +72,10 @@ FboInfo shadowMapFB;
 int shadowMapResolution = 1024;
 int shadowMapClampMode = ClampMode::Edge;
 bool shadowMapClampBorderShadowed = false;
-bool usePolygonOffset = false;
+bool usePolygonOffset = true;
 bool useSoftFalloff = false;
 bool useHardwarePCF = false;
-float polygonOffset_factor = .25f;
+float polygonOffset_factor = 1.f;
 float polygonOffset_units = 1.0f;
 
 
@@ -138,6 +138,9 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////
     shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
 
+    glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 
     glEnable(GL_DEPTH_TEST); // enable Z-buffering
     glEnable(GL_CULL_FACE);  // enables backface culling
@@ -177,6 +180,7 @@ void drawScene(GLuint currentShaderProgram,
     labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
                               normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
     labhelper::setUniformSlow(currentShaderProgram, "spotOuterAngle", std::cos(radians(outerSpotlightAngle)));
+    labhelper::setUniformSlow(currentShaderProgram, "spotInnerAngle", std::cos(radians(innerSpotlightAngle)));
     mat4 lightMatrix = translate(vec3(0.5f))
                        * scale(vec3(0.5f))
                        * lightProjectionMatrix
@@ -248,6 +252,20 @@ void display() {
 
     if (shadowMapFB.width != shadowMapResolution || shadowMapFB.height != shadowMapResolution) {
         shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
+    }
+
+    if (shadowMapClampMode == ClampMode::Edge) {
+        glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+
+    if (shadowMapClampMode == ClampMode::Border) {
+        glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        vec4 border(shadowMapClampBorderShadowed ? 0.f : 1.f);
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &border.x);
     }
 
     ///////////////////////////////////////////////////////////////////////////
