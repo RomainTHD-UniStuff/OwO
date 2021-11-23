@@ -63,7 +63,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
     vec3 direct_illum = base_color;
 
     float d = distance(viewSpaceLightPosition, viewSpacePosition);
-    vec3 Li = point_light_intensity_multiplier * point_light_color * 1/(d*d);
+    vec3 Li = point_light_intensity_multiplier * point_light_color * 1./(d*d);
 
     vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
 
@@ -85,15 +85,15 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 base_color) {
 
     float brdf = F * D * G / (4. * dot(n, wo) * dot(n, wi));
 
-    vec3 dielectric_term = brdf * dot(n, wi) * Li + (1 - F) * diffuse_term;
+    vec3 dielectric_term = brdf * dot(n, wi) * Li + (1. - F) * diffuse_term;
 
     float m = material_metalness;
     vec3 metal_term = brdf * material_color * dot(n, wi) * Li;
-    vec3 microfacet_term = m * metal_term + (1 - m) * dielectric_term;
+    vec3 microfacet_term = m * metal_term + (1. - m) * dielectric_term;
 
     float r = material_reflectivity;
 
-    return r * microfacet_term + (1 - r) * diffuse_term;
+    return r * microfacet_term + (1. - r) * diffuse_term;
 }
 
 vec3 calculateIndirectIllumination(vec3 wo, vec3 n) {
@@ -128,10 +128,10 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n) {
     vec3 metal_term = F * material_color * Li;
 
     float m = material_metalness;
-    vec3 microfacet_term = m * metal_term + (1 - m) * dielectric_term;
+    vec3 microfacet_term = m * metal_term + (1. - m) * dielectric_term;
 
     float r = material_reflectivity;
-    indirect_illum = r * microfacet_term + (1 - r) * diffuse_term;
+    indirect_illum = r * microfacet_term + (1. - r) * diffuse_term;
 
     return indirect_illum;
 }
@@ -140,7 +140,6 @@ void main() {
     // float depth = texture(shadowMapTex, shadowMapCoord.xy / shadowMapCoord.w).x;
     // float visibility = (depth >= (shadowMapCoord.z / shadowMapCoord.w)) ? 1.0 : 0.0;
     float visibility = textureProj(shadowMapTex, shadowMapCoord);
-    float attenuation = 1.0;
 
     vec3 wo = -normalize(viewSpacePosition);
     vec3 n = normalize(viewSpaceNormal);

@@ -254,6 +254,10 @@ void display() {
         shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
     }
 
+    GLint glMode = useHardwarePCF ? GL_LINEAR : GL_NEAREST;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glMode);
+
     if (shadowMapClampMode == ClampMode::Edge) {
         glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
