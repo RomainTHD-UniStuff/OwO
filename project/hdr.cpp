@@ -4,11 +4,11 @@
 
 namespace labhelper {
     struct HDRImage {
-        int width, height, components;
+        int width{}, height{}, components{};
         float* data = nullptr;
 
         // Constructor
-        HDRImage(const std::string& filename) {
+        explicit HDRImage(const std::string& filename) {
             stbi_set_flip_vertically_on_load(false);
             data = stbi_loadf(filename.c_str(), &width, &height, &components, 3);
             stbi_set_flip_vertically_on_load(true);

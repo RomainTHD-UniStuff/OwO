@@ -2,7 +2,7 @@
 #include "heightfield.h"
 
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <glm/glm.hpp>
 #include <stb_image.h>
@@ -10,7 +10,7 @@
 using namespace glm;
 using std::string;
 
-HeightField::HeightField(void) :
+HeightField::HeightField() :
     m_meshResolution(0),
     m_vao(UINT32_MAX),
     m_positionBuffer(UINT32_MAX),
@@ -18,9 +18,7 @@ HeightField::HeightField(void) :
     m_indexBuffer(UINT32_MAX),
     m_numIndices(0),
     m_texid_hf(UINT32_MAX),
-    m_texid_diffuse(UINT32_MAX),
-    m_heightFieldPath(""),
-    m_diffuseTexturePath("") {
+    m_texid_diffuse(UINT32_MAX) {
 }
 
 void HeightField::loadHeightField(const std::string& heightFieldPath) {
@@ -79,7 +77,7 @@ void HeightField::generateMesh(int tesselation) {
     // (y is 0 but will be altered in height field vertex shader)
 }
 
-void HeightField::submitTriangles(void) {
+void HeightField::submitTriangles() const {
     if (m_vao == UINT32_MAX) {
         std::cout << "No vertex array is generated, cannot draw anything.\n";
         return;

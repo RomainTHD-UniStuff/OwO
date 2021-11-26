@@ -10,9 +10,9 @@ public:
     int height;
     bool isComplete;
 
-    FboInfo(int numberOfColorBuffers = 1);
+    explicit FboInfo(int numberOfColorBuffers = 1);
 
     void resize(int w, int h);
 
-    bool checkFramebufferComplete(void);
+    bool checkFramebufferComplete() const;
 };

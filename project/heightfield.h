@@ -14,7 +14,7 @@ public:
     std::string m_heightFieldPath;
     std::string m_diffuseTexturePath;
 
-    HeightField(void);
+    HeightField();
 
     // load height field
     void loadHeightField(const std::string& heightFieldPath);
@@ -26,6 +26,5 @@ public:
     void generateMesh(int tesselation);
 
     // render height map
-    void submitTriangles(void);
-
+    void submitTriangles() const;
 };

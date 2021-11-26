@@ -20,14 +20,15 @@ public:
     int max_size;
 
     // Ctor/Dtor
-    ParticleSystem() : max_size(0) {
+    ParticleSystem() :
+        max_size(0) {
     }
 
-    explicit ParticleSystem(int size) : max_size(size) {
+    explicit ParticleSystem(int size) :
+        max_size(size) {
     }
 
-    ~ParticleSystem() {
-    }
+    ~ParticleSystem() = default;
 
     // Methods
     void kill(int id);
