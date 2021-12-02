@@ -1,5 +1,6 @@
 #include <string>
 #include <GL/glew.h>
+#include <vector>
 
 class HeightField {
 public:
@@ -27,4 +28,9 @@ public:
 
     // render height map
     void submitTriangles() const;
+
+private:
+    std::vector<float> positions;
+    std::vector<float> texCoords;
+    std::vector<unsigned short> indices;
 };

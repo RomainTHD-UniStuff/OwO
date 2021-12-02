@@ -71,10 +71,56 @@ void HeightField::loadDiffuseTexture(const std::string& diffusePath) {
     std::cout << "Successfully loaded diffuse texture: " << diffusePath << ".\n";
 }
 
-
 void HeightField::generateMesh(int tesselation) {
     // generate a mesh in range -1 to 1 in x and z
     // (y is 0 but will be altered in height field vertex shader)
+
+    glGenVertexArrays(1, &this->m_vao);
+    glBindVertexArray(this->m_vao);
+
+    positions.reserve((tesselation + 1) * (tesselation + 1) * 3);
+    texCoords.reserve((tesselation + 1) * (tesselation + 1) * 2);
+    indices.reserve(tesselation * tesselation * 2 * 3);
+
+    for (int z = 0; z <= tesselation; ++z) {
+        for (int x = 0; x <= tesselation; ++x) {
+            positions.push_back(2.f * (float) x / ((float) tesselation) - 1.f); // x
+            positions.push_back(0.f);                                           // y
+            positions.push_back(2.f * (float) z / ((float) tesselation) - 1.f); // z
+
+            texCoords.push_back((float) x / ((float) tesselation)); // u
+            texCoords.push_back((float) z / ((float) tesselation)); // v
+        }
+    }
+
+    for (int z = 0; z < tesselation; ++z) {
+        for (int x = 0; x < tesselation; ++x) {
+            // Top triangle
+            indices.push_back(x + z * (tesselation + 1));
+            indices.push_back(x + 1 + z * (tesselation + 1));
+            indices.push_back(x + 1 + (z + 1) * (tesselation + 1));
+
+            // Bottom triangle
+            indices.push_back(x + z * (tesselation + 1));
+            indices.push_back(x + (z + 1) * (tesselation + 1));
+            indices.push_back(x + 1 + (z + 1) * (tesselation + 1));
+        }
+    }
+
+    // Positions
+    glGenBuffers(1, &this->m_positionBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, this->m_positionBuffer);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), &positions[0], GL_STATIC_DRAW);
+
+    // Texture coordinates
+    glGenBuffers(1, &this->m_uvBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, this->m_uvBuffer);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
+
+    // Triangle indices
+    glGenBuffers(1, &this->m_indexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
 }
 
 void HeightField::submitTriangles() const {
@@ -83,4 +129,21 @@ void HeightField::submitTriangles() const {
         return;
     }
 
+    glEnable(GL_PRIMITIVE_RESTART);
+    glPrimitiveRestartIndex(UINT32_MAX);
+
+    glBindVertexArray(this->m_vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, this->m_positionBuffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, this->m_uvBuffer);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(2);
+
+    glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_SHORT, nullptr);
 }

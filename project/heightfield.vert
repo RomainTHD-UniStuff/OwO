@@ -9,16 +9,12 @@ layout(location = 2) in vec2 texCoordIn;
 // Input uniform variables
 ///////////////////////////////////////////////////////////////////////////////
 
-uniform mat4 normalMatrix;
-uniform mat4 modelViewMatrix;
 uniform mat4 modelViewProjectionMatrix;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output to fragment shader
 ///////////////////////////////////////////////////////////////////////////////
 out vec2 texCoord;
-out vec3 viewSpacePosition;
-out vec3 viewSpaceNormal;
 
 void main() {
     gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);

@@ -23,6 +23,7 @@ using namespace glm;
 #include <Model.h>
 #include "hdr.h"
 #include "fbo.h"
+#include "heightfield.h"
 
 
 using std::min;
@@ -48,6 +49,7 @@ bool g_isMouseDragging = false;
 GLuint shaderProgram;       // Shader for rendering the final image
 GLuint simpleShaderProgram; // Shader used to draw the shadow map
 GLuint backgroundProgram;
+GLuint heightfieldProgram;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -97,6 +99,7 @@ vec3 worldUp(0.0f, 1.0f, 0.0f);
 labhelper::Model* fighterModel = nullptr;
 labhelper::Model* landingpadModel = nullptr;
 labhelper::Model* sphereModel = nullptr;
+HeightField terrain;
 
 mat4 roomModelMatrix;
 mat4 landingPadModelMatrix;
@@ -117,12 +120,17 @@ void loadShaders(bool is_reload) {
     if (shader != 0) {
         shaderProgram = shader;
     }
+    shader = labhelper::loadShaderProgram("../project/heightfield.vert", "../project/heightfield.frag", is_reload);
+    if (shader != 0) {
+        heightfieldProgram = shader;
+    }
 }
 
 void initGL() {
     ///////////////////////////////////////////////////////////////////////
     //		Load Shaders
     ///////////////////////////////////////////////////////////////////////
+    heightfieldProgram = labhelper::loadShaderProgram("../project/heightfield.vert", "../project/heightfield.frag");
     backgroundProgram = labhelper::loadShaderProgram("../project/background.vert",
                                                      "../project/background.frag");
     shaderProgram = labhelper::loadShaderProgram("../project/shading.vert", "../project/shading.frag");
@@ -160,6 +168,8 @@ void initGL() {
 
     glEnable(GL_DEPTH_TEST); // enable Z-buffering
     glEnable(GL_CULL_FACE);  // enables backface culling
+
+    terrain.generateMesh(16);
 }
 
 void debugDrawLight(const glm::mat4& viewMatrix,
@@ -227,6 +237,22 @@ void drawScene(GLuint currentShaderProgram,
     labhelper::render(fighterModel);
 }
 
+void drawMesh(const mat4& viewMatrix,
+              const mat4& projectionMatrix,
+              const mat4& lightViewMatrix,
+              const mat4& lightProjectionMatrix) {
+    GLuint currentShaderProgram = heightfieldProgram;
+    glUseProgram(currentShaderProgram);
+
+    // camera
+    labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
+
+    // landing pad
+    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
+                              projectionMatrix * viewMatrix * scale(mat4(1.f), vec3(50.f)));
+
+    terrain.submitTriangles();
+}
 
 void display() {
     ///////////////////////////////////////////////////////////////////////////
@@ -324,10 +350,9 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     drawBackground(viewMatrix, projMatrix);
-    drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
+    // drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
+    drawMesh(viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
     debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
-
-
 }
 
 bool handleEvents() {
