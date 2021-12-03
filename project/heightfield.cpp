@@ -73,53 +73,70 @@ void HeightField::loadDiffuseTexture(const std::string& diffusePath) {
 
 /// generate a mesh in range -1 to 1 in x and z
 /// (y is 0 but will be altered in height field vertex shader)
-void HeightField::generateMesh(int pTesselation) {
-    this->tesselation = pTesselation;
+void HeightField::generateMesh(int p_tessellation) {
+    this->tessellation = p_tessellation;
 
-    glGenVertexArrays(1, &this->m_vao);
+    if (this->m_positionBuffer == UINT32_MAX) {
+        glGenBuffers(1, &this->m_positionBuffer);
+    } else {
+        glInvalidateBufferData(this->m_positionBuffer);
+    }
+
+    if (this->m_uvBuffer == UINT32_MAX) {
+        glGenBuffers(1, &this->m_uvBuffer);
+    } else {
+        glInvalidateBufferData(this->m_uvBuffer);
+    }
+
+    if (this->m_indexBuffer == UINT32_MAX) {
+        glGenBuffers(1, &this->m_indexBuffer);
+    } else {
+        glInvalidateBufferData(this->m_indexBuffer);
+    }
+
+    if (this->m_vao == UINT32_MAX) {
+        glGenVertexArrays(1, &this->m_vao);
+    }
     glBindVertexArray(this->m_vao);
 
-    positions.reserve((tesselation + 1) * (tesselation + 1) * 3);
-    texCoords.reserve((tesselation + 1) * (tesselation + 1) * 2);
-    indices.reserve(tesselation * tesselation * 2 * 3);
+    positions.reserve((tessellation + 1) * (tessellation + 1) * 3);
+    texCoords.reserve((tessellation + 1) * (tessellation + 1) * 2);
+    indices.reserve(tessellation * tessellation * 2 * 3);
 
-    for (int z = 0; z <= tesselation; ++z) {
-        for (int x = 0; x <= tesselation; ++x) {
-            positions.push_back(2.f * (float) x / ((float) tesselation) - 1.f); // x
+    for (int z = 0; z <= tessellation; ++z) {
+        for (int x = 0; x <= tessellation; ++x) {
+            positions.push_back(2.f * (float) x / ((float) tessellation) - 1.f); // x
             positions.push_back(0.f);                                           // y
-            positions.push_back(2.f * (float) z / ((float) tesselation) - 1.f); // z
+            positions.push_back(2.f * (float) z / ((float) tessellation) - 1.f); // z
 
-            texCoords.push_back((float) x / ((float) tesselation)); // u
-            texCoords.push_back((float) z / ((float) tesselation)); // v
+            texCoords.push_back((float) x / ((float) tessellation)); // u
+            texCoords.push_back((float) z / ((float) tessellation)); // v
         }
     }
 
-    for (int z = 0; z <= tesselation; ++z) {
-        for (int x = 0; x <= tesselation; ++x) {
-            indices.push_back(x + z * (tesselation + 1));
-            indices.push_back(x + (z + 1) * (tesselation + 1));
+    for (int z = 0; z < tessellation; ++z) {
+        for (int x = 0; x <= tessellation; ++x) {
+            indices.push_back(x + z * (tessellation + 1));
+            indices.push_back(x + (z + 1) * (tessellation + 1));
         }
 
         indices.push_back(UINT32_MAX);
     }
 
     // Positions
-    glGenBuffers(1, &this->m_positionBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, this->m_positionBuffer);
     glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), &positions[0], GL_STATIC_DRAW);
 
     // Texture coordinates
-    glGenBuffers(1, &this->m_uvBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, this->m_uvBuffer);
     glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
 
     // Triangle indices
-    glGenBuffers(1, &this->m_indexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
 }
 
-void HeightField::submitTriangles() const {
+void HeightField::submitTriangles(bool linesOnly) const {
     if (m_vao == UINT32_MAX) {
         std::cout << "No vertex array is generated, cannot draw anything.\n";
         return;
@@ -141,7 +158,13 @@ void HeightField::submitTriangles() const {
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if (linesOnly) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
     glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_INT, nullptr);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if (linesOnly) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }

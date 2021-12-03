@@ -36,12 +36,13 @@ SDL_Window* g_window = nullptr;
 float currentTime = 0.0f;
 float previousTime = 0.0f;
 float deltaTime = 0.0f;
-bool showUI = false;
+bool showUI = true;
 int windowWidth, windowHeight;
 
 // Mouse input
 ivec2 g_prevMouseCoords = {-1, -1};
 bool g_isMouseDragging = false;
+bool g_isMouseRightDragging = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Shader programs
@@ -62,7 +63,9 @@ const std::string envmap_base_name = "001";
 // Light source
 ///////////////////////////////////////////////////////////////////////////////
 vec3 lightPosition;
+float lightRotation = 0.f;
 vec3 point_light_color = vec3(1.f, 1.f, 1.f);
+bool lightManualOnly = false;
 
 float point_light_intensity_multiplier = 10000.0f;
 
@@ -89,9 +92,10 @@ float polygonOffset_units = 1.0f;
 ///////////////////////////////////////////////////////////////////////////////
 vec3 cameraPosition(-70.0f, 50.0f, 70.0f);
 vec3 cameraDirection = normalize(vec3(0.0f) - cameraPosition);
-float cameraSpeed = 10.f;
+float cameraSpeed = 30.f;
 
 vec3 worldUp(0.0f, 1.0f, 0.0f);
+float rotation_speed = 15.f;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Models
@@ -99,7 +103,12 @@ vec3 worldUp(0.0f, 1.0f, 0.0f);
 labhelper::Model* fighterModel = nullptr;
 labhelper::Model* landingpadModel = nullptr;
 labhelper::Model* sphereModel = nullptr;
+
 HeightField terrain;
+bool onlyTrianglesMesh = false;
+int tessellation = 256;
+float meshIntensity = 50.f;
+float terrainSize = 100.f;
 
 mat4 roomModelMatrix;
 mat4 landingPadModelMatrix;
@@ -169,7 +178,7 @@ void initGL() {
     glEnable(GL_DEPTH_TEST); // enable Z-buffering
     glEnable(GL_CULL_FACE);  // enables backface culling
 
-    terrain.generateMesh(16);
+    terrain.generateMesh(tessellation);
 }
 
 void debugDrawLight(const glm::mat4& viewMatrix,
@@ -244,14 +253,13 @@ void drawMesh(const mat4& viewMatrix,
     GLuint currentShaderProgram = heightfieldProgram;
     glUseProgram(currentShaderProgram);
 
-    // camera
     labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-
-    // landing pad
     labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * scale(mat4(1.f), vec3(50.f)));
+                              projectionMatrix * viewMatrix * rotate(radians(-45.f), vec3(0., 1., 0.))
+                              * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize)));
+    labhelper::setUniformSlow(currentShaderProgram, "intensity", meshIntensity / 100);
 
-    terrain.submitTriangles();
+    terrain.submitTriangles(onlyTrianglesMesh);
 }
 
 void display() {
@@ -274,7 +282,11 @@ void display() {
     mat4 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraDirection, worldUp);
 
     vec4 lightStartPosition = vec4(40.0f, 40.0f, 0.0f, 1.0f);
-    lightPosition = vec3(rotate(currentTime, worldUp) * lightStartPosition);
+    float light_rotation_speed = 1.f;
+    if (!lightManualOnly && !g_isMouseRightDragging) {
+        lightRotation += deltaTime * light_rotation_speed;
+    }
+    lightPosition = vec3(rotate(lightRotation, worldUp) * lightStartPosition);
     mat4 lightViewMatrix = lookAt(lightPosition, vec3(0.0f), worldUp);
     mat4 lightProjMatrix = perspective(radians(45.0f), 1.0f, 25.0f, 100.0f);
 
@@ -352,7 +364,7 @@ void display() {
     drawBackground(viewMatrix, projMatrix);
     // drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
     drawMesh(viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
-    debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
+    // debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
 }
 
 bool handleEvents() {
@@ -366,9 +378,14 @@ bool handleEvents() {
         if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_g) {
             showUI = !showUI;
         }
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT
-            && (!showUI || !ImGui::GetIO().WantCaptureMouse)) {
-            g_isMouseDragging = true;
+        if (event.type == SDL_MOUSEBUTTONDOWN && (!showUI || !ImGui::GetIO().WantCaptureMouse)
+            && (event.button.button == SDL_BUTTON_LEFT || event.button.button == SDL_BUTTON_RIGHT)
+            && !(g_isMouseDragging || g_isMouseRightDragging)) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                g_isMouseDragging = true;
+            } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                g_isMouseRightDragging = true;
+            }
             int x;
             int y;
             SDL_GetMouseState(&x, &y);
@@ -379,16 +396,22 @@ bool handleEvents() {
         if (!(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT))) {
             g_isMouseDragging = false;
         }
+        if (!(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_RIGHT))) {
+            g_isMouseRightDragging = false;
+        }
 
         if (event.type == SDL_MOUSEMOTION && g_isMouseDragging) {
             // More info at https://wiki.libsdl.org/SDL_MouseMotionEvent
-            int delta_x = event.motion.x - g_prevMouseCoords.x;
-            int delta_y = event.motion.y - g_prevMouseCoords.y;
-            float rotationSpeed = 0.1f;
-            mat4 yaw = rotate(rotationSpeed * deltaTime * -delta_x, worldUp);
-            mat4 pitch = rotate(rotationSpeed * deltaTime * -delta_y,
-                                normalize(cross(cameraDirection, worldUp)));
-            cameraDirection = vec3(pitch * yaw * vec4(cameraDirection, 0.0f));
+            float delta_x = (float) event.motion.x - (float) g_prevMouseCoords.x;
+            float delta_y = (float) event.motion.y - (float) g_prevMouseCoords.y;
+            if (g_isMouseDragging) {
+                mat4 yaw = rotate(rotation_speed / 100.f * deltaTime * -delta_x, worldUp);
+                mat4 pitch = rotate(rotation_speed / 100.f * deltaTime * -delta_y,
+                                    normalize(cross(cameraDirection, worldUp)));
+                cameraDirection = vec3(pitch * yaw * vec4(cameraDirection, 0.0f));
+            } else if (g_isMouseRightDragging) {
+                lightRotation += delta_x * 0.01f;
+            }
             g_prevMouseCoords.x = event.motion.x;
             g_prevMouseCoords.y = event.motion.y;
         }
@@ -426,12 +449,34 @@ void gui() {
     // ----------------- Set variables --------------------------
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
+    ImGui::Checkbox("Manual light only (right-click drag to move)", &lightManualOnly);
+    ImGui::Checkbox("Mesh triangles only", &onlyTrianglesMesh);
+    ImGui::SliderFloat("Mesh intensity", &meshIntensity, 0.f, 1000.f, "%.0f", 2.f);
+    ImGui::SliderFloat("Terrain size", &terrainSize, 10.f, 1000.f, "%.0f");
+    ImGui::SliderFloat("Camera rotation speed", &rotation_speed, 0.f, 50.f, "%.0f");
+    ImGui::SliderFloat("Camera movement speed", &cameraSpeed, 10.f, 100.f, "%.0f");
+    if (ImGui::Button("Reload Shaders")) {
+        loadShaders(true);
+    }
+
+    if (ImGui::Button("Randomize seed")) {
+
+    }
+
+    if (ImGui::SliderInt("Tessellation", &tessellation, 2, 256)) {
+        // TODO:
+        // terrain.generateMesh(tessellation);
+    }
+
     // ----------------------------------------------------------
     // Render the GUI.
     ImGui::Render();
 }
 
 int main(int argc, char* argv[]) {
+    (void) argc;
+    (void) argv;
+
     g_window = labhelper::init_window_SDL("OpenGL Project");
 
     initGL();

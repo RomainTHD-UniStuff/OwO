@@ -24,14 +24,14 @@ public:
     void loadDiffuseTexture(const std::string& diffusePath);
 
     // generate mesh
-    void generateMesh(int tesselation);
+    void generateMesh(int tessellation);
 
     // render height map
-    void submitTriangles() const;
+    void submitTriangles(bool linesOnly) const;
 
 private:
     std::vector<float> positions;
     std::vector<float> texCoords;
     std::vector<uint32_t> indices;
-    int tesselation;
+    int tessellation{};
 };
