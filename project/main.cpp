@@ -107,7 +107,8 @@ labhelper::Model* sphereModel = nullptr;
 HeightField terrain;
 bool onlyTrianglesMesh = false;
 int tessellation = 256;
-float meshIntensity = 50.f;
+float meshHeightIntensity = 50.f;
+float meshDensityIntensity = 300.f;
 float terrainSize = 100.f;
 
 mat4 roomModelMatrix;
@@ -200,6 +201,23 @@ void drawBackground(const mat4& viewMatrix, const mat4& projectionMatrix) {
     labhelper::drawFullScreenQuad();
 }
 
+void drawMesh(GLuint currentShaderProgram,
+              const mat4& viewMatrix,
+              const mat4& projectionMatrix,
+              const mat4& lightViewMatrix,
+              const mat4& lightProjectionMatrix) {
+    glUseProgram(currentShaderProgram);
+
+    labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
+    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
+                              projectionMatrix * viewMatrix * rotate(radians(-45.f), vec3(0., 1., 0.))
+                              * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize)));
+    labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", meshDensityIntensity / 100);
+    labhelper::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
+
+    terrain.submitTriangles(onlyTrianglesMesh);
+}
+
 void drawScene(GLuint currentShaderProgram,
                const mat4& viewMatrix,
                const mat4& projectionMatrix,
@@ -244,22 +262,8 @@ void drawScene(GLuint currentShaderProgram,
                               inverse(transpose(viewMatrix * fighterModelMatrix)));
 
     labhelper::render(fighterModel);
-}
 
-void drawMesh(const mat4& viewMatrix,
-              const mat4& projectionMatrix,
-              const mat4& lightViewMatrix,
-              const mat4& lightProjectionMatrix) {
-    GLuint currentShaderProgram = heightfieldProgram;
-    glUseProgram(currentShaderProgram);
-
-    labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * rotate(radians(-45.f), vec3(0., 1., 0.))
-                              * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize)));
-    labhelper::setUniformSlow(currentShaderProgram, "intensity", meshIntensity / 100);
-
-    terrain.submitTriangles(onlyTrianglesMesh);
+    drawMesh(currentShaderProgram, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix);
 }
 
 void display() {
@@ -363,7 +367,7 @@ void display() {
 
     drawBackground(viewMatrix, projMatrix);
     // drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
-    drawMesh(viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
+    drawMesh(heightfieldProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
     // debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
 }
 
@@ -451,7 +455,8 @@ void gui() {
                 ImGui::GetIO().Framerate);
     ImGui::Checkbox("Manual light only (right-click drag to move)", &lightManualOnly);
     ImGui::Checkbox("Mesh triangles only", &onlyTrianglesMesh);
-    ImGui::SliderFloat("Mesh intensity", &meshIntensity, 0.f, 1000.f, "%.0f", 2.f);
+    ImGui::SliderFloat("Mesh height intensity", &meshHeightIntensity, 0.f, 1000.f, "%.0f", 2.f);
+    ImGui::SliderFloat("Mesh density intensity", &meshDensityIntensity, 100.f, 2000.f, "%.0f", 2.f);
     ImGui::SliderFloat("Terrain size", &terrainSize, 10.f, 1000.f, "%.0f");
     ImGui::SliderFloat("Camera rotation speed", &rotation_speed, 0.f, 50.f, "%.0f");
     ImGui::SliderFloat("Camera movement speed", &cameraSpeed, 10.f, 100.f, "%.0f");
@@ -463,7 +468,7 @@ void gui() {
 
     }
 
-    if (ImGui::SliderInt("Tessellation", &tessellation, 2, 256)) {
+    if (ImGui::SliderInt("Tessellation", &tessellation, 2, 2048)) {
         // TODO:
         // terrain.generateMesh(tessellation);
     }

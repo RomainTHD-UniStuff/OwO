@@ -106,7 +106,7 @@ void HeightField::generateMesh(int p_tessellation) {
     for (int z = 0; z <= tessellation; ++z) {
         for (int x = 0; x <= tessellation; ++x) {
             positions.push_back(2.f * (float) x / ((float) tessellation) - 1.f); // x
-            positions.push_back(0.f);                                           // y
+            positions.push_back(0.f);                                            // y
             positions.push_back(2.f * (float) z / ((float) tessellation) - 1.f); // z
 
             texCoords.push_back((float) x / ((float) tessellation)); // u
