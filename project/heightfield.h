@@ -12,6 +12,7 @@ public:
     GLuint m_uvBuffer;
     GLuint m_indexBuffer;
     GLuint m_numIndices;
+    GLuint m_normalsBuffer;
     std::string m_heightFieldPath;
     std::string m_diffuseTexturePath;
 
@@ -32,6 +33,7 @@ public:
 private:
     std::vector<float> positions;
     std::vector<float> texCoords;
+    std::vector<float> normals;
     std::vector<uint32_t> indices;
     int tessellation{};
 };

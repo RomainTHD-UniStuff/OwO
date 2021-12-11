@@ -208,10 +208,32 @@ void drawMesh(GLuint currentShaderProgram,
               const mat4& lightProjectionMatrix) {
     glUseProgram(currentShaderProgram);
 
+    // Light source
+    vec4 viewSpaceLightPosition = viewMatrix * vec4(lightPosition, 1.0f);
+    labhelper::setUniformSlow(currentShaderProgram, "point_light_color", point_light_color);
+    labhelper::setUniformSlow(currentShaderProgram, "point_light_intensity_multiplier",
+                              point_light_intensity_multiplier);
+    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
+    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
+                              normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
+    mat4 lightMatrix = translate(vec3(0.5f))
+                       * scale(vec3(0.5f))
+                       * lightProjectionMatrix
+                       * lightViewMatrix
+                       * inverse(viewMatrix);
+    labhelper::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
+
+    labhelper::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
+
+    mat4 modelMatrix = rotate(radians(-45.f), vec3(0., 1., 0.))
+        * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize));
+
+    labhelper::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * modelMatrix);
+    labhelper::setUniformSlow(currentShaderProgram, "normalMatrix",
+                              inverse(transpose(viewMatrix * modelMatrix)));
+
     labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * rotate(radians(-45.f), vec3(0., 1., 0.))
-                              * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize)));
+    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
     labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", meshDensityIntensity / 100);
     labhelper::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
 
@@ -244,26 +266,6 @@ void drawScene(GLuint currentShaderProgram,
 
     // camera
     labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-
-    // landing pad
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * landingPadModelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * landingPadModelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "normalMatrix",
-                              inverse(transpose(viewMatrix * landingPadModelMatrix)));
-
-    labhelper::render(landingpadModel);
-
-    // Fighter
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * fighterModelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * fighterModelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "normalMatrix",
-                              inverse(transpose(viewMatrix * fighterModelMatrix)));
-
-    labhelper::render(fighterModel);
-
-    drawMesh(currentShaderProgram, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix);
 }
 
 void display() {
@@ -366,9 +368,9 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     drawBackground(viewMatrix, projMatrix);
-    // drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
+    drawScene(shaderProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
     drawMesh(heightfieldProgram, viewMatrix, projMatrix, lightViewMatrix, lightProjMatrix);
-    // debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
+    debugDrawLight(viewMatrix, projMatrix, vec3(lightPosition));
 }
 
 bool handleEvents() {
@@ -453,24 +455,35 @@ void gui() {
     // ----------------- Set variables --------------------------
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
-    ImGui::Checkbox("Manual light only (right-click drag to move)", &lightManualOnly);
-    ImGui::Checkbox("Mesh triangles only", &onlyTrianglesMesh);
-    ImGui::SliderFloat("Mesh height intensity", &meshHeightIntensity, 0.f, 1000.f, "%.0f", 2.f);
-    ImGui::SliderFloat("Mesh density intensity", &meshDensityIntensity, 100.f, 2000.f, "%.0f", 2.f);
-    ImGui::SliderFloat("Terrain size", &terrainSize, 10.f, 1000.f, "%.0f");
-    ImGui::SliderFloat("Camera rotation speed", &rotation_speed, 0.f, 50.f, "%.0f");
-    ImGui::SliderFloat("Camera movement speed", &cameraSpeed, 10.f, 100.f, "%.0f");
+
+    if (ImGui::CollapsingHeader("Terrain", "terrain_ch", true, true)) {
+        ImGui::Checkbox("Mesh triangles only", &onlyTrianglesMesh);
+        ImGui::SliderFloat("Mesh height intensity", &meshHeightIntensity, 0.f, 1000.f, "%.0f", 2.f);
+        ImGui::SliderFloat("Mesh density intensity", &meshDensityIntensity, 100.f, 2000.f, "%.0f", 2.f);
+        ImGui::SliderFloat("Terrain size", &terrainSize, 10.f, 1000.f, "%.0f");
+        if (ImGui::SliderInt("Tessellation", &tessellation, 2, 2048)) {
+            terrain.generateMesh(tessellation);
+        }
+        if (ImGui::Button("Randomize seed")) {
+
+        }
+    }
+
+    if (ImGui::CollapsingHeader("Camera", "camera_ch", true, true)) {
+        ImGui::SliderFloat("Camera rotation speed", &rotation_speed, 0.f, 50.f, "%.0f");
+        ImGui::SliderFloat("Camera movement speed", &cameraSpeed, 10.f, 100.f, "%.0f");
+    }
+
+    if (ImGui::CollapsingHeader("Light", "light_ch", true, true)) {
+        ImGui::SliderFloat("Environment multiplier", &environment_multiplier, 0.0f, 10.0f);
+        ImGui::ColorEdit3("Point light color", &point_light_color.x);
+        ImGui::SliderFloat("Point light intensity multiplier", &point_light_intensity_multiplier, 0.0f,
+                           30000.0f, "%.3f", 2.f);
+        ImGui::Checkbox("Manual light only (right-click drag to move)", &lightManualOnly);
+    }
+
     if (ImGui::Button("Reload Shaders")) {
         loadShaders(true);
-    }
-
-    if (ImGui::Button("Randomize seed")) {
-
-    }
-
-    if (ImGui::SliderInt("Tessellation", &tessellation, 2, 2048)) {
-        // TODO:
-        // terrain.generateMesh(tessellation);
     }
 
     // ----------------------------------------------------------

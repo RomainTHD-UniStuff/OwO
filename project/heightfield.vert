@@ -3,12 +3,14 @@
 // Input vertex attributes
 ///////////////////////////////////////////////////////////////////////////////
 layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normalIn;
 layout(location = 2) in vec2 texCoordIn;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Input uniform variables
 ///////////////////////////////////////////////////////////////////////////////
-
+uniform mat4 normalMatrix;
+uniform mat4 modelViewMatrix;
 uniform mat4 modelViewProjectionMatrix;
 uniform float heightIntensity;
 uniform float densityIntensity;
@@ -18,6 +20,8 @@ uniform float densityIntensity;
 ///////////////////////////////////////////////////////////////////////////////
 out float yPos;
 out float colorBleeding;
+out vec3 viewSpaceNormal;
+out vec3 viewSpacePosition;
 
 vec3 mod289(vec3 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -112,5 +116,10 @@ void main() {
     colorBleeding /= 8;
 
     yPos = y.y;
-    gl_Position = modelViewProjectionMatrix * vec4(position.x, yPos, position.z, 1.0);
+
+    vec4 newPos = vec4(position.x, yPos, position.z, 1.0);
+
+    gl_Position = modelViewProjectionMatrix * newPos;
+    viewSpaceNormal = (normalMatrix * vec4(normalIn, 0.0)).xyz;
+    viewSpacePosition = (modelViewMatrix * newPos).xyz;
 }

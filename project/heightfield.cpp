@@ -76,31 +76,22 @@ void HeightField::loadDiffuseTexture(const std::string& diffusePath) {
 void HeightField::generateMesh(int p_tessellation) {
     this->tessellation = p_tessellation;
 
-    if (this->m_positionBuffer == UINT32_MAX) {
-        glGenBuffers(1, &this->m_positionBuffer);
-    } else {
-        glInvalidateBufferData(this->m_positionBuffer);
-    }
+    glGenBuffers(1, &this->m_positionBuffer);
+    glGenBuffers(1, &this->m_uvBuffer);
+    glGenBuffers(1, &this->m_indexBuffer);
+    glGenBuffers(1, &this->m_normalsBuffer);
 
-    if (this->m_uvBuffer == UINT32_MAX) {
-        glGenBuffers(1, &this->m_uvBuffer);
-    } else {
-        glInvalidateBufferData(this->m_uvBuffer);
-    }
-
-    if (this->m_indexBuffer == UINT32_MAX) {
-        glGenBuffers(1, &this->m_indexBuffer);
-    } else {
-        glInvalidateBufferData(this->m_indexBuffer);
-    }
-
-    if (this->m_vao == UINT32_MAX) {
-        glGenVertexArrays(1, &this->m_vao);
-    }
+    glGenVertexArrays(1, &this->m_vao);
     glBindVertexArray(this->m_vao);
+
+    positions.clear();
+    texCoords.clear();
+    normals.clear();
+    indices.clear();
 
     positions.reserve((tessellation + 1) * (tessellation + 1) * 3);
     texCoords.reserve((tessellation + 1) * (tessellation + 1) * 2);
+    normals.reserve((tessellation + 1) * (tessellation + 1) * 3);
     indices.reserve(tessellation * tessellation * 2 * 3);
 
     for (int z = 0; z <= tessellation; ++z) {
@@ -111,6 +102,10 @@ void HeightField::generateMesh(int p_tessellation) {
 
             texCoords.push_back((float) x / ((float) tessellation)); // u
             texCoords.push_back((float) z / ((float) tessellation)); // v
+
+            normals.push_back(rand() % 100 / 100.f);
+            normals.push_back(rand() % 100 / 100.f);
+            normals.push_back(rand() % 100 / 100.f);
         }
     }
 
@@ -126,10 +121,20 @@ void HeightField::generateMesh(int p_tessellation) {
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, this->m_positionBuffer);
     glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), &positions[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(0);
+
+    // Normals
+    glBindBuffer(GL_ARRAY_BUFFER, this->m_normalsBuffer);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), &normals[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(1);
 
     // Texture coordinates
     glBindBuffer(GL_ARRAY_BUFFER, this->m_uvBuffer);
     glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, nullptr);
+    glEnableVertexAttribArray(2);
 
     // Triangle indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
@@ -146,16 +151,6 @@ void HeightField::submitTriangles(bool linesOnly) const {
     glPrimitiveRestartIndex(UINT32_MAX);
 
     glBindVertexArray(this->m_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, this->m_uvBuffer);
-    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, nullptr);
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, this->m_positionBuffer);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
-    glEnableVertexAttribArray(0);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_indexBuffer);
 
     if (linesOnly) {
