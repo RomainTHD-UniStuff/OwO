@@ -14,6 +14,7 @@ uniform mat4 modelViewMatrix;
 uniform mat4 modelViewProjectionMatrix;
 uniform float heightIntensity;
 uniform float densityIntensity;
+uniform vec2 seed;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output to fragment shader
@@ -22,6 +23,8 @@ out float yPos;
 out float colorBleeding;
 out vec3 viewSpaceNormal;
 out vec3 viewSpacePosition;
+
+#define PI 3.1415926535897932384626433832795
 
 vec3 mod289(vec3 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -44,6 +47,7 @@ vec3 permute(vec3 x) {
 // Cellular noise, returning F1 and F2 in a vec2.
 // Standard 3x3 search window for good F1 and F2 values
 vec2 cnoise(vec2 P) {
+    P += seed;
     #define K 0.142857142857 // 1/7
     #define Ko 0.428571428571 // 3/7
     #define jitter 1.0 // Less gives more regular pattern
@@ -85,30 +89,49 @@ vec2 cnoise(vec2 P) {
 }
 
 void main() {
+    float densityIntensityFixed = densityIntensity / 50;
+
     vec2 y = vec2(0);
-    y += cnoise(position.xz * densityIntensity / 16) * 16;
-    y += cnoise(position.xz * densityIntensity / 8) * 8;
-    y += cnoise(position.xz * densityIntensity / 4) * 4;
-    y += cnoise(position.xz * densityIntensity / 2) * 2;
-    y += cnoise(position.xz * densityIntensity);
-    y += cnoise(position.xz * densityIntensity * 2) / 2;
-    y += cnoise(position.xz * densityIntensity * 4) / 4;
-    y += cnoise(position.xz * densityIntensity * 8) / 4;
-    y += cnoise(position.xz * densityIntensity * 16) / 8;
-    y += cnoise(position.xz * densityIntensity * 32) / 8;
+    y += cnoise(position.xz * densityIntensityFixed / 16) * 16;
+    y += cnoise(position.xz * densityIntensityFixed / 8) * 8;
+    y += cnoise(position.xz * densityIntensityFixed / 4) * 4;
+    y += cnoise(position.xz * densityIntensityFixed / 2) * 2;
+    y += cnoise(position.xz * densityIntensityFixed);
+    y += cnoise(position.xz * densityIntensityFixed * 2) / 2;
+    y += cnoise(position.xz * densityIntensityFixed * 4) / 4;
+    y += cnoise(position.xz * densityIntensityFixed * 8) / 8;
+    y += cnoise(position.xz * densityIntensityFixed * 16) / 16;
+    y += cnoise(position.xz * densityIntensityFixed * 32) / 16;
     y = vec2(dot(normalize(y), vec2(1, 0)));
-    y -= vec2(0.5);
+    y -= vec2(0.4);
     y /= 2;
-    y *= heightIntensity * 4;
+
+    /*
+    float omega = 0.2;
+    float mu = 0.;
+    float a = 1. / (omega * sqrt(2*PI));
+    float b = mu;
+    float c = omega;
+    float alpha = -1/2. * c * c;
+    float beta = b / (c * c);
+    float gamma = log(a) - (b * b / (2 * c * c));
+    float gaussianGrowthX = clamp(abs(y.y), 0, 1) * 10;
+    float gaussianGrowthCoeff = exp(alpha * pow(gaussianGrowthX, 2) + beta * gaussianGrowthX + gamma);
+    y *= gaussianGrowthCoeff / 5 * heightIntensity * 6;
+    */
+    // FIXME: Use tanh instead ?
+    y *= heightIntensity * 3;
 
     vec2 vBleedingPos = normalize(y + cnoise(position.xz * 10));
 
     vec2 vBleeding = vec2(0);
-    vBleeding += cnoise(vBleedingPos / 8);
+    vBleeding += cnoise(vBleedingPos / 16) * 3;
     vBleeding += cnoise(vBleedingPos / 4);
+    vBleeding += cnoise(vBleedingPos * 4);
     vBleeding += cnoise(vBleedingPos * 8);
-    vBleeding += cnoise(vBleedingPos * 32);
-    vBleeding /= 4;
+    vBleeding += cnoise(vBleedingPos * 16) / 2;
+    vBleeding += cnoise(cnoise(vBleedingPos) * 32) / 2;
+    vBleeding /= 7;
 
     colorBleeding = vBleeding.x;
     colorBleeding = abs(colorBleeding);
@@ -117,7 +140,10 @@ void main() {
 
     yPos = y.y;
 
-    vec4 newPos = vec4(position.x, yPos, position.z, 1.0);
+    float dx = vBleeding.x * heightIntensity / 100;
+    float dz = vBleeding.y * heightIntensity / 100;
+
+    vec4 newPos = vec4(position.x + dx, yPos, position.z + dz, 1.0);
 
     gl_Position = modelViewProjectionMatrix * newPos;
     viewSpaceNormal = (normalMatrix * vec4(normalIn, 0.0)).xyz;
