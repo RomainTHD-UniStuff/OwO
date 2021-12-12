@@ -110,6 +110,7 @@ int tessellation = 256;
 float meshHeightIntensity = 50.f;
 float meshDensityIntensity = 300.f;
 float terrainSize = 100.f;
+float randomSeed = 100.;
 
 mat4 roomModelMatrix;
 mat4 landingPadModelMatrix;
@@ -228,13 +229,15 @@ void drawMesh(GLuint currentShaderProgram,
     mat4 modelMatrix = rotate(radians(-45.f), vec3(0., 1., 0.))
         * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize));
 
+    labhelper::setUniformSlow(currentShaderProgram, "seed", vec2(randomSeed, randomSeed / 2));
+
     labhelper::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * modelMatrix);
     labhelper::setUniformSlow(currentShaderProgram, "normalMatrix",
                               inverse(transpose(viewMatrix * modelMatrix)));
 
     labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
     labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", meshDensityIntensity / 100);
+    labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", (meshDensityIntensity * terrainSize) / 100);
     labhelper::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
 
     terrain.submitTriangles(onlyTrianglesMesh);
@@ -458,14 +461,14 @@ void gui() {
 
     if (ImGui::CollapsingHeader("Terrain", "terrain_ch", true, true)) {
         ImGui::Checkbox("Mesh triangles only", &onlyTrianglesMesh);
-        ImGui::SliderFloat("Mesh height intensity", &meshHeightIntensity, 0.f, 1000.f, "%.0f", 2.f);
+        ImGui::SliderFloat("Mesh height intensity", &meshHeightIntensity, 10.f, 1000.f, "%.0f", 2.f);
         ImGui::SliderFloat("Mesh density intensity", &meshDensityIntensity, 100.f, 2000.f, "%.0f", 2.f);
         ImGui::SliderFloat("Terrain size", &terrainSize, 10.f, 1000.f, "%.0f");
         if (ImGui::SliderInt("Tessellation", &tessellation, 2, 2048)) {
             terrain.generateMesh(tessellation);
         }
         if (ImGui::Button("Randomize seed")) {
-
+            randomSeed = (float) (rand() % 1000);
         }
     }
 

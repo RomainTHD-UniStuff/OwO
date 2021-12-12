@@ -554,6 +554,9 @@ namespace labhelper {
         return buffer;
     }
 
+    void setUniformSlow(GLuint shaderProgram, const char* name, const glm::vec2& value) {
+        glUniform2fv(glGetUniformLocation(shaderProgram, name), 1, &value.x);
+    }
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const glm::mat4& matrix) {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, false, &matrix[0].x);

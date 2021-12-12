@@ -90,12 +90,8 @@ namespace labhelper {
 /**
 	 * Helper function: creates a cube map using the files specified for each face.
 	 */
-    GLuint loadCubeMap(const char* facePosX,
-                       const char* faceNegX,
-                       const char* facePosY,
-                       const char* faceNegY,
-                       const char* facePosZ,
-                       const char* faceNegZ);
+    GLuint loadCubeMap(const char* facePosX, const char* faceNegX, const char* facePosY, const char* faceNegY,
+                       const char* facePosZ, const char* faceNegZ);
 
 /**
 	 * Helper function used to get log info (such as errors) about a shader object or shader program
@@ -108,9 +104,10 @@ namespace labhelper {
 	 * The reason for this is that before linking we need to bind attribute locations, using
 	 * glBindAttribLocation and fragment data lications, using glBindFragDataLocation.
 	 */
-    GLuint loadShaderProgram(const std::string& vertexShader,
-                             const std::string& fragmentShader,
-                             bool allow_errors = false);
+    GLuint
+    loadShaderProgram(const std::string& vertexShader,
+                      const std::string& fragmentShader,
+                      bool allow_errors = false);
 
 /**
 	 * Call to link a shader program prevoiusly loaded using loadShaderProgram.
@@ -121,13 +118,14 @@ namespace labhelper {
 	 * Creates a GL buffer and uploads the given data to it.
 	 * returns the handle of the GL buffer.
 	 */
-    GLuint createAddAttribBuffer(GLuint vertexArrayObject,
-                                 const void* data,
-                                 const size_t dataSize,
-                                 GLuint attributeIndex,
-                                 GLsizei attributeSize,
-                                 GLenum type,
-                                 GLenum bufferUsage = GL_STATIC_DRAW);
+    GLuint
+    createAddAttribBuffer(GLuint vertexArrayObject,
+                          const void* data,
+                          const size_t dataSize,
+                          GLuint attributeIndex,
+                          GLsizei attributeSize,
+                          GLenum type,
+                          GLenum bufferUsage = GL_STATIC_DRAW);
 
 
 /**
@@ -137,6 +135,8 @@ namespace labhelper {
 	 * However, in the simple tutorial samples, performance is not an issue.
 	 * Overloaded to set many types.
 	 */
+    void setUniformSlow(GLuint shaderProgram, const char* name, const glm::vec2& value);
+
     void setUniformSlow(GLuint shaderProgram, const char* name, const glm::mat4& matrix);
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const float value);
