@@ -1,10 +1,14 @@
-# Ignore windows build files
 /bin/
 /build/
 
-# Linux ignores
 build/
 .ycm_extra_conf.py*
 
 /.idea/
 /cmake-build-*/
+
+/external/*
+!/external/.gitkeep
+
+/external_src/*
+!/external_src/.gitkeep
