@@ -1,7 +1,15 @@
-# Description
-This is the repository for the tutorials of the course TDA362/DIT223 Computer Graphics given at Chalmers University of
-Technology 2019. It contains resources and skeleton code which is to be filled in by students in six different lab assignments and one larger project. 
+# OwO
 
-The accompanying web page to this repository is located at http://www.cse.chalmers.se/edu/course/TDA362/tutorials/index.html.
+![GitHub](https://img.shields.io/github/license/RomainTHD/OwO)
+![Language](https://img.shields.io/badge/language-C%2B%2B-0052cf)
 
-Instructions on how to use this repository specifically can be found at http://www.cse.chalmers.se/edu/course/TDA362/tutorials/start.html.
+Open World generation I guess, well not really for now but you get the idea
+
+<br/>
+
+<img src="./.github/media/preview.png" width="600" alt="Preview">
+
+# Credits
+
+* [**Chalmers CSE**](https://www.cse.chalmers.se/edu/course/TDA362/) : Code boilerplate
+* [**Heargo**](https://github.com/Heargo/) : Color palette
