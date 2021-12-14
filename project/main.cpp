@@ -100,8 +100,6 @@ float rotation_speed = 15.f;
 ///////////////////////////////////////////////////////////////////////////////
 // Models
 ///////////////////////////////////////////////////////////////////////////////
-labhelper::Model* fighterModel = nullptr;
-labhelper::Model* landingpadModel = nullptr;
 labhelper::Model* sphereModel = nullptr;
 
 HeightField terrain;
@@ -150,8 +148,6 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////
     // Load models and set up model matrices
     ///////////////////////////////////////////////////////////////////////
-    fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
-    landingpadModel = labhelper::loadModelFromOBJ("../scenes/landingpad.obj");
     sphereModel = labhelper::loadModelFromOBJ("../scenes/sphere.obj");
 
     roomModelMatrix = mat4(1.0f);
@@ -352,9 +348,6 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawScene(simpleShaderProgram, lightViewMatrix, lightProjMatrix, lightViewMatrix, lightProjMatrix);
 
-    labhelper::Material& screen = landingpadModel->m_materials[8];
-    screen.m_emission_texture.gl_id = shadowMapFB.colorTextureTargets[0];
-
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
 
@@ -526,8 +519,6 @@ int main(int argc, char* argv[]) {
         stopRendering = handleEvents();
     }
     // Free Models
-    labhelper::freeModel(fighterModel);
-    labhelper::freeModel(landingpadModel);
     labhelper::freeModel(sphereModel);
 
     // Shut down everything. This includes the window and all other subsystems.
