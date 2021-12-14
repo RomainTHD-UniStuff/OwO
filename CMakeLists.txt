@@ -35,4 +35,4 @@ set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(labhelper)
-add_subdirectory(project)
+add_subdirectory(src)

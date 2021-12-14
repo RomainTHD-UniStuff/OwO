@@ -115,21 +115,21 @@ mat4 landingPadModelMatrix;
 mat4 fighterModelMatrix;
 
 void loadShaders(bool is_reload) {
-    GLuint shader = labhelper::loadShaderProgram("../project/simple.vert", "../project/simple.frag",
+    GLuint shader = labhelper::loadShaderProgram("../src/simple.vert", "../src/simple.frag",
                                                  is_reload);
     if (shader != 0) {
         simpleShaderProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../project/background.vert", "../project/background.frag",
+    shader = labhelper::loadShaderProgram("../src/background.vert", "../src/background.frag",
                                           is_reload);
     if (shader != 0) {
         backgroundProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../project/shading.vert", "../project/shading.frag", is_reload);
+    shader = labhelper::loadShaderProgram("../src/shading.vert", "../src/shading.frag", is_reload);
     if (shader != 0) {
         shaderProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../project/heightfield.vert", "../project/heightfield.frag", is_reload);
+    shader = labhelper::loadShaderProgram("../src/heightfield.vert", "../src/heightfield.frag", is_reload);
     if (shader != 0) {
         heightfieldProgram = shader;
     }
@@ -139,11 +139,11 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////
     //		Load Shaders
     ///////////////////////////////////////////////////////////////////////
-    heightfieldProgram = labhelper::loadShaderProgram("../project/heightfield.vert", "../project/heightfield.frag");
-    backgroundProgram = labhelper::loadShaderProgram("../project/background.vert",
-                                                     "../project/background.frag");
-    shaderProgram = labhelper::loadShaderProgram("../project/shading.vert", "../project/shading.frag");
-    simpleShaderProgram = labhelper::loadShaderProgram("../project/simple.vert", "../project/simple.frag");
+    heightfieldProgram = labhelper::loadShaderProgram("../src/heightfield.vert", "../src/heightfield.frag");
+    backgroundProgram = labhelper::loadShaderProgram("../src/background.vert",
+                                                     "../src/background.frag");
+    shaderProgram = labhelper::loadShaderProgram("../src/shading.vert", "../src/shading.frag");
+    simpleShaderProgram = labhelper::loadShaderProgram("../src/simple.vert", "../src/simple.frag");
 
     ///////////////////////////////////////////////////////////////////////
     // Load models and set up model matrices
