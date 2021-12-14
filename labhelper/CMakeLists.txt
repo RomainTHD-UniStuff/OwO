@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(labhelper)
 
 # External libraries which need to be built.
-add_subdirectory(${CMAKE_SOURCE_DIR}/external_src/imgui-1.51 ${CMAKE_CURRENT_BINARY_DIR}/imgui)
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/imgui-1.51 ${CMAKE_CURRENT_BINARY_DIR}/imgui)
 set_target_properties(imgui PROPERTIES FOLDER external)
 
 find_package(SDL2 REQUIRED)
@@ -32,8 +32,8 @@ set_property(SOURCE Model.cpp labhelper.cpp PROPERTY COMPILE_OPTIONS "$<$<CONFIG
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         ${CMAKE_SOURCE_DIR}/labhelper
-        ${CMAKE_SOURCE_DIR}/external_src/stb-master
-        ${CMAKE_SOURCE_DIR}/external_src/tinyobjloader-1.0.6
+        ${CMAKE_SOURCE_DIR}/external/stb-master
+        ${CMAKE_SOURCE_DIR}/external/tinyobjloader-1.0.6
         ${SDL2_INCLUDE_DIRS}
         ${GLM_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
