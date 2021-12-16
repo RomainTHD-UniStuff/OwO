@@ -110,10 +110,6 @@ float meshDensityIntensity = 300.f;
 float terrainSize = 100.f;
 float randomSeed = 100.;
 
-mat4 roomModelMatrix;
-mat4 landingPadModelMatrix;
-mat4 fighterModelMatrix;
-
 void loadShaders(bool is_reload) {
     GLuint shader = labhelper::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag",
                                                  is_reload);
@@ -149,10 +145,6 @@ void initGL() {
     // Load models and set up model matrices
     ///////////////////////////////////////////////////////////////////////
     sphereModel = labhelper::loadModelFromOBJ("../scenes/sphere.obj");
-
-    roomModelMatrix = mat4(1.0f);
-    fighterModelMatrix = translate(15.0f * worldUp);
-    landingPadModelMatrix = mat4(1.0f);
 
     ///////////////////////////////////////////////////////////////////////
     // Load environment map

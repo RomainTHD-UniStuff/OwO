@@ -2,38 +2,74 @@
 #include <GL/glew.h>
 #include <vector>
 
+/**
+ * Heightfield
+ */
 class HeightField {
 public:
-    int m_meshResolution; // triangles edges per quad side
-    GLuint m_texid_hf;
-    GLuint m_texid_diffuse;
-    GLuint m_vao;
-    GLuint m_positionBuffer;
-    GLuint m_uvBuffer;
-    GLuint m_indexBuffer;
-    GLuint m_numIndices;
-    GLuint m_normalsBuffer;
-    std::string m_heightFieldPath;
-    std::string m_diffuseTexturePath;
+    /**
+     * Default constructor
+     */
+    HeightField() = default;
 
-    HeightField();
+    /**
+     * Generate the mesh
+     * @param tessellation Tessellation level, the number of "squares" per side
+     */
+    void generateMesh(int tessellation) noexcept;
 
-    // load height field
-    void loadHeightField(const std::string& heightFieldPath);
-
-    // load diffuse map
-    void loadDiffuseTexture(const std::string& diffusePath);
-
-    // generate mesh
-    void generateMesh(int tessellation);
-
-    // render height map
-    void submitTriangles(bool linesOnly) const;
+    /**
+     * Display the mesh
+     * @param linesOnly Render only the lines
+     */
+    void submitTriangles(bool linesOnly) const noexcept;
 
 private:
+    //-------------------------------------------------------------------------
+    // OpenGL variables
+    //-------------------------------------------------------------------------
+
+    /**
+     * VAO
+     */
+    GLuint vao {UINT32_MAX};
+
+    /**
+     * Position buffer
+     */
+    GLuint positionBuffer {UINT32_MAX};
+
+    /**
+     * UV buffer
+     */
+    GLuint uvBuffer {UINT32_MAX};
+
+    /**
+     * Index buffer
+     */
+    GLuint indexBuffer {UINT32_MAX};
+
+    //-------------------------------------------------------------------------
+    // Inner variables
+    //-------------------------------------------------------------------------
+
+    /**
+     * List of triangles positions (x, 0, z)
+     */
     std::vector<float> positions;
+
+    /**
+     * List of corresponding texture coordinates between [0, 1[
+     */
     std::vector<float> texCoords;
-    std::vector<float> normals;
+
+    /**
+     * Triangles indices
+     */
     std::vector<uint32_t> indices;
-    int tessellation{};
+
+    /**
+     * Tesselation level
+     */
+    int tessellation {0};
 };
