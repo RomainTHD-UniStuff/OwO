@@ -101,24 +101,23 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data) {
 
     for (int n = 0; n < draw_data->CmdListsCount; n++) {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        const ImDrawIdx* idx_buffer_offset = 0;
+        const ImDrawIdx* idx_buffer_offset = nullptr;
 
         glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
-        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)),
                      (const GLvoid*) cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx),
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) (cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)),
                      (const GLvoid*) cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
 
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
-            }
-            else {
+            } else {
                 glBindTexture(GL_TEXTURE_2D, (GLuint) (intptr_t) pcmd->TextureId);
-                glScissor((int) pcmd->ClipRect.x, (int) (fb_height - pcmd->ClipRect.w),
+                glScissor((int) pcmd->ClipRect.x, (int) ((float) fb_height - pcmd->ClipRect.w),
                           (int) (pcmd->ClipRect.z - pcmd->ClipRect.x),
                           (int) (pcmd->ClipRect.w - pcmd->ClipRect.y));
                 glDrawElements(GL_TRIANGLES, (GLsizei) pcmd->ElemCount,
@@ -141,26 +140,22 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data) {
     glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
     if (last_enable_blend) {
         glEnable(GL_BLEND);
-    }
-    else {
+    } else {
         glDisable(GL_BLEND);
     }
     if (last_enable_cull_face) {
         glEnable(GL_CULL_FACE);
-    }
-    else {
+    } else {
         glDisable(GL_CULL_FACE);
     }
     if (last_enable_depth_test) {
         glEnable(GL_DEPTH_TEST);
-    }
-    else {
+    } else {
         glDisable(GL_DEPTH_TEST);
     }
     if (last_enable_scissor_test) {
         glEnable(GL_SCISSOR_TEST);
-    }
-    else {
+    } else {
         glDisable(GL_SCISSOR_TEST);
     }
     glPolygonMode(GL_FRONT_AND_BACK, last_polygon_mode[0]);
@@ -169,11 +164,11 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data) {
               (GLsizei) last_scissor_box[3]);
 }
 
-static const char* ImGui_ImplSdlGL3_GetClipboardText(void*) {
+inline static const char* ImGui_ImplSdlGL3_GetClipboardText(void*) {
     return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplSdlGL3_SetClipboardText(void*, const char* text) {
+inline static void ImGui_ImplSdlGL3_SetClipboardText(void*, const char* text) {
     SDL_SetClipboardText(text);
 }
 
@@ -279,8 +274,8 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects() {
     g_ShaderHandle = glCreateProgram();
     g_VertHandle = glCreateShader(GL_VERTEX_SHADER);
     g_FragHandle = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(g_VertHandle, 1, &vertex_shader, 0);
-    glShaderSource(g_FragHandle, 1, &fragment_shader, 0);
+    glShaderSource(g_VertHandle, 1, &vertex_shader, nullptr);
+    glShaderSource(g_FragHandle, 1, &fragment_shader, nullptr);
     glCompileShader(g_VertHandle);
     glCompileShader(g_FragHandle);
     glAttachShader(g_ShaderHandle, g_VertHandle);
@@ -349,7 +344,7 @@ void ImGui_ImplSdlGL3_InvalidateDeviceObjects() {
 
     if (g_FontTexture) {
         glDeleteTextures(1, &g_FontTexture);
-        ImGui::GetIO().Fonts->TexID = 0;
+        ImGui::GetIO().Fonts->TexID = nullptr;
         g_FontTexture = 0;
     }
 }
@@ -381,11 +376,11 @@ bool ImGui_ImplSdlGL3_Init(SDL_Window* window) {
         ImGui_ImplSdlGL3_RenderDrawLists; // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.SetClipboardTextFn = ImGui_ImplSdlGL3_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplSdlGL3_GetClipboardText;
-    io.ClipboardUserData = NULL;
+    io.ClipboardUserData = nullptr;
 
 #ifdef _WIN32
     SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
+    SDL_VERSION(&wmInfo.version)
     SDL_GetWindowWMInfo(window, &wmInfo);
     io.ImeWindowHandle = wmInfo.info.win.window;
 #else
@@ -413,8 +408,8 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window) {
     SDL_GetWindowSize(window, &w, &h);
     SDL_GL_GetDrawableSize(window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float) w, (float) h);
-    io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float) display_w / w) : 0,
-                                        h > 0 ? ((float) display_h / h) : 0);
+    io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float) display_w / (float) w) : 0,
+                                        h > 0 ? ((float) display_h / (float) h) : 0);
 
     // Setup time step
     Uint32 time = SDL_GetTicks();
@@ -430,8 +425,7 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window) {
         io.MousePos =
             ImVec2((float) mx,
                    (float) my); // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
-    }
-    else {
+    } else {
         io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
     }
 

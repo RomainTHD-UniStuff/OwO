@@ -215,7 +215,7 @@ void drawMesh(GLuint currentShaderProgram,
     labhelper::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
 
     mat4 modelMatrix = rotate(radians(-45.f), vec3(0., 1., 0.))
-        * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize));
+                       * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize));
 
     labhelper::setUniformSlow(currentShaderProgram, "seed", vec2(randomSeed, randomSeed / 2));
 
@@ -224,7 +224,8 @@ void drawMesh(GLuint currentShaderProgram,
                               inverse(transpose(viewMatrix * modelMatrix)));
 
     labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
+    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
+                              projectionMatrix * viewMatrix * modelMatrix);
     labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", (meshDensityIntensity * terrainSize) / 100);
     labhelper::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
 

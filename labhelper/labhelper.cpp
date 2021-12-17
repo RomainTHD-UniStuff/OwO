@@ -112,20 +112,6 @@ namespace labhelper {
         return window;
     }
 
-    void shutDown(SDL_Window* window) {
-        // If newframe is not ever run before shut down we crash
-        ImGui_ImplSdlGL3_NewFrame(window);
-
-        //Destroy imgui
-        ImGui_ImplSdlGL3_Shutdown();
-
-        //Destroy window
-        SDL_DestroyWindow(window);
-
-        //Quit SDL subsystems
-        SDL_Quit();
-    }
-
     GLuint loadCubeMap(const char* facePosX,
                        const char* faceNegX,
                        const char* facePosY,
@@ -137,7 +123,7 @@ namespace labhelper {
         //********************************************
         class tempTexHelper {
         public:
-            static void loadCubeMapFace(std::string filename, GLenum face) {
+            static void loadCubeMapFace(const std::string& filename, GLenum face) {
                 int w, h, comp;
                 unsigned char* image = stbi_load(filename.c_str(), &w, &h, &comp, STBI_rgb_alpha);
 
@@ -186,8 +172,22 @@ namespace labhelper {
         //	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);			  // or replace trilinear mipmap filtering with nicest anisotropic filtering
 
 
-        CHECK_GL_ERROR();
+        CHECK_GL_ERROR()
         return textureID;
+    }
+
+    void shutDown(SDL_Window* window) {
+        // If newframe is not ever run before shut down we crash
+        ImGui_ImplSdlGL3_NewFrame(window);
+
+        //Destroy imgui
+        ImGui_ImplSdlGL3_Shutdown();
+
+        //Destroy window
+        SDL_DestroyWindow(window);
+
+        //Quit SDL subsystems
+        SDL_Quit();
     }
 
 
@@ -344,8 +344,9 @@ namespace labhelper {
             // Additionally: if it's (really) bad -> break!
             if (aSeverity == GL_DEBUG_SEVERITY_HIGH) {
 #if defined(_WIN32)
-                if (IsDebuggerPresent())
+                if (IsDebuggerPresent()) {
                     __debugbreak();
+                }
 #else  // !win32
                 raise(SIGTRAP);
 #endif // ~ platform
@@ -358,7 +359,7 @@ namespace labhelper {
 
     void setupGLDebugMessages() {
         // Check for GL errors prior to us.
-        CHECK_GL_ERROR();
+        CHECK_GL_ERROR()
 
         /* Make sure that we support this extension before attempting to do any-
              * thing with it...
@@ -376,9 +377,9 @@ namespace labhelper {
         /* Enable debug messages. Set a callback handle, and then enable all
              * messages to begin with.
              */
-        glDebugMessageCallback((GLDEBUGPROC) handle_debug_message_, 0);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, true);
-        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PERFORMANCE, GL_DONT_CARE, 0, 0, false);
+        glDebugMessageCallback((GLDEBUGPROC) handle_debug_message_, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, true);
+        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PERFORMANCE, GL_DONT_CARE, 0, nullptr, false);
 
         /* Enable synchronous debug output; this causes the callback to be called
              * immediately on error, usually in the actual gl-function where the error
@@ -395,14 +396,14 @@ namespace labhelper {
              * enabled. For now, disable the lowest level of messages, which mostly
              * contain performance-related information and other random notes.
              */
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, 0, false);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, false);
 
         /* Now, check if enabling debug messages caused a GL error. If so, that
              * error might not be reported by the debug message mechanism (after all,
              * the error occurred while setting it up). Later errors should be reported
              * via the callbacks, though.
              */
-        CHECK_GL_ERROR();
+        CHECK_GL_ERROR()
     }
 
 // Error reporting
@@ -415,7 +416,7 @@ namespace labhelper {
         }
             // On Win32 we'll use a message box. On !Win32, just print to stderr and abort()
 #if defined(_WIN32)
-        MessageBox(0, errorString.c_str(), title.c_str(), MB_OK | MB_ICONEXCLAMATION);
+        MessageBox(nullptr, errorString.c_str(), title.c_str(), MB_OK | MB_ICONEXCLAMATION);
 #else
         fprintf(stderr, "%s : %s\n", title.c_str(), errorString.c_str());
 #endif
@@ -431,7 +432,7 @@ namespace labhelper {
         }
             // On Win32 we'll use a message box. On !Win32, just print to stderr and abort()
 #if defined(_WIN32)
-        MessageBox(0, errorString.c_str(), title.c_str(), MB_OK | MB_ICONEXCLAMATION);
+        MessageBox(nullptr, errorString.c_str(), title.c_str(), MB_OK | MB_ICONEXCLAMATION);
 #else
         fprintf(stderr, "%s : %s\n", title.c_str(), errorString.c_str());
 #endif
@@ -480,8 +481,7 @@ namespace labhelper {
             std::string err = GetShaderInfoLog(vShader);
             if (allow_errors) {
                 non_fatal_error(err, "Vertex Shader");
-            }
-            else {
+            } else {
                 fatal_error(err, "Vertex Shader");
             }
             return 0;
@@ -493,8 +493,7 @@ namespace labhelper {
             std::string err = GetShaderInfoLog(fShader);
             if (allow_errors) {
                 non_fatal_error(err, "Fragment Shader");
-            }
-            else {
+            } else {
                 fatal_error(err, "Fragment Shader");
             }
             return 0;
@@ -505,10 +504,13 @@ namespace labhelper {
         glDeleteShader(fShader);
         glAttachShader(shaderProgram, vShader);
         glDeleteShader(vShader);
-        if (!allow_errors) CHECK_GL_ERROR();
+        if (!allow_errors) {
+            CHECK_GL_ERROR()
+        }
 
-        if (!linkShaderProgram(shaderProgram, allow_errors))
+        if (!linkShaderProgram(shaderProgram, allow_errors)) {
             return 0;
+        }
 
         return shaderProgram;
     }
@@ -522,8 +524,7 @@ namespace labhelper {
             std::string err = GetShaderInfoLog(shaderProgram);
             if (allow_errors) {
                 non_fatal_error(err, "Linking");
-            }
-            else {
+            } else {
                 fatal_error(err, "Linking");
             }
             return false;
@@ -542,14 +543,14 @@ namespace labhelper {
         GLuint buffer = 0;
         glGenBuffers(1, &buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, dataSize, data, bufferUsage);
-        CHECK_GL_ERROR();
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) dataSize, data, bufferUsage);
+        CHECK_GL_ERROR()
 
         // Now attach buffer to vertex array object.
         glBindVertexArray(vertexArrayObject);
-        glVertexAttribPointer(attributeIndex, attributeSize, type, false, 0, 0);
+        glVertexAttribPointer(attributeIndex, attributeSize, type, false, 0, nullptr);
         glEnableVertexAttribArray(attributeIndex);
-        CHECK_GL_ERROR();
+        CHECK_GL_ERROR()
 
         return buffer;
     }
@@ -567,8 +568,7 @@ namespace labhelper {
     }
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const GLint value) {
-        int loc = glGetUniformLocation(shaderProgram, name);
-        glUniform1i(loc, value);
+        glUniform1i(glGetUniformLocation(shaderProgram, name), value);
     }
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const glm::vec3& value) {
@@ -576,7 +576,7 @@ namespace labhelper {
     }
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const uint32_t nof_values, const glm::vec3* values) {
-        glUniform3fv(glGetUniformLocation(shaderProgram, name), nof_values, (float*) values);
+        glUniform3fv(glGetUniformLocation(shaderProgram, name), (GLsizei) nof_values, (float*) values);
     }
 
     void debugDrawLine(const glm::mat4& viewMatrix,
@@ -615,15 +615,16 @@ namespace labhelper {
         }
         glBindVertexArray(vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, nofVertices);
-        if (previous_depth_state)
+        if (previous_depth_state) {
             glEnable(GL_DEPTH_TEST);
+        }
     }
 
-    float uniform_randf(const float from, const float to) {
+    inline float uniform_randf(const float from, const float to) {
         return from + (to - from) * float(rand()) / float(RAND_MAX);
     }
 
-    float randf() {
+    inline float randf() {
         return float(rand()) / float(RAND_MAX);
     }
 
@@ -647,22 +648,20 @@ namespace labhelper {
         if (sx >= -sy) {
             if (sx > sy) { // Handle first region of disk
                 r = sx;
-                if (sy > 0.0)
+                if (sy > 0.0) {
                     theta = sy / r;
-                else
+                } else {
                     theta = 8.0f + sy / r;
-            }
-            else { // Handle second region of disk
+                }
+            } else { // Handle second region of disk
                 r = sy;
                 theta = 2.0f - sx / r;
             }
-        }
-        else {
+        } else {
             if (sx <= sy) { // Handle third region of disk
                 r = -sx;
                 theta = 4.0f - sy / r;
-            }
-            else { // Handle fourth region of disk
+            } else { // Handle fourth region of disk
                 r = -sy;
                 theta = 6.0f + sx / r;
             }

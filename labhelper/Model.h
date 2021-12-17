@@ -73,11 +73,11 @@ namespace labhelper {
         uint32_t m_vaob;
     };
 
-    Model* loadModelFromOBJ(std::string filename);
+    Model* loadModelFromOBJ(const std::string& filename);
 
-    void saveModelToOBJ(Model* model, std::string filename);
+    void saveModelToOBJ(Model* model, const std::string& filename);
 
     void freeModel(Model* model);
 
-    void render(const Model* model, const bool submitMaterials = true);
+    void render(const Model* model, bool submitMaterials = true);
 } // namespace labhelper

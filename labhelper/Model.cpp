@@ -6,8 +6,6 @@
 #include <tiny_obj_loader.h>
 //#include <experimental/tinyobj_loader_opt.h>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
 #include <GL/glew.h>
 #include <stb_image.h>
 
@@ -29,20 +27,17 @@ namespace labhelper {
         if (_components == 1) {
             format = GL_R;
             internal_format = GL_R8;
-        }
-        else if (_components == 3) {
+        } else if (_components == 3) {
             format = GL_RGB;
             internal_format = GL_RGB;
-        }
-        else if (_components == 4) {
+        } else if (_components == 4) {
             format = GL_RGBA;
             internal_format = GL_RGBA;
-        }
-        else {
+        } else {
             std::cout << "Texture loading not implemented for this number of compenents.\n";
             exit(1);
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, (GLint) internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -56,26 +51,32 @@ namespace labhelper {
 // Destructor
 ///////////////////////////////////////////////////////////////////////////
     Model::~Model() {
-        for (auto& material : m_materials) {
-            if (material.m_color_texture.valid)
+        for (auto& material: m_materials) {
+            if (material.m_color_texture.valid) {
                 glDeleteTextures(1, &material.m_color_texture.gl_id);
-            if (material.m_reflectivity_texture.valid)
+            }
+            if (material.m_reflectivity_texture.valid) {
                 glDeleteTextures(1, &material.m_reflectivity_texture.gl_id);
-            if (material.m_shininess_texture.valid)
+            }
+            if (material.m_shininess_texture.valid) {
                 glDeleteTextures(1, &material.m_shininess_texture.gl_id);
-            if (material.m_metalness_texture.valid)
+            }
+            if (material.m_metalness_texture.valid) {
                 glDeleteTextures(1, &material.m_metalness_texture.gl_id);
-            if (material.m_fresnel_texture.valid)
+            }
+            if (material.m_fresnel_texture.valid) {
                 glDeleteTextures(1, &material.m_fresnel_texture.gl_id);
-            if (material.m_emission_texture.valid)
+            }
+            if (material.m_emission_texture.valid) {
                 glDeleteTextures(1, &material.m_emission_texture.gl_id);
+            }
         }
         glDeleteBuffers(1, &m_positions_bo);
         glDeleteBuffers(1, &m_normals_bo);
         glDeleteBuffers(1, &m_texture_coordinates_bo);
     }
 
-    Model* loadModelFromOBJ(std::string path) {
+    Model* loadModelFromOBJ(const std::string& path) {
         ///////////////////////////////////////////////////////////////////////
         // Separate filename into directory, base filename and extension
         // NOTE: This can be made a LOT simpler as soon as compilers properly
@@ -86,12 +87,11 @@ namespace labhelper {
         if (separator != std::string::npos) {
             filename = path.substr(separator + 1, path.size() - separator - 1);
             directory = path.substr(0, separator + 1);
-        }
-        else {
+        } else {
             filename = path;
             directory = "./";
         }
-        separator = filename.find_last_of(".");
+        separator = filename.find_last_of('.');
         if (separator == std::string::npos) {
             std::cout << "Fatal: loadModelFromOBJ(): Expecting filename ending in '.obj'\n";
             exit(1);
@@ -116,38 +116,38 @@ namespace labhelper {
         if (!ret) {
             exit(1);
         }
-        Model* model = new Model;
+        auto* model = new Model;
         model->m_name = filename;
         model->m_filename = path;
 
         ///////////////////////////////////////////////////////////////////////
         // Transform all materials into our datastructure
         ///////////////////////////////////////////////////////////////////////
-        for (const auto& m : materials) {
+        for (const auto& m: materials) {
             Material material;
             material.m_name = m.name;
             material.m_color = glm::vec3(m.diffuse[0], m.diffuse[1], m.diffuse[2]);
-            if (m.diffuse_texname != "") {
+            if (!m.diffuse_texname.empty()) {
                 material.m_color_texture.load(directory, m.diffuse_texname, 4);
             }
             material.m_reflectivity = m.specular[0];
-            if (m.specular_texname != "") {
+            if (!m.specular_texname.empty()) {
                 material.m_reflectivity_texture.load(directory, m.specular_texname, 1);
             }
             material.m_metalness = m.metallic;
-            if (m.metallic_texname != "") {
+            if (!m.metallic_texname.empty()) {
                 material.m_metalness_texture.load(directory, m.metallic_texname, 1);
             }
             material.m_fresnel = m.sheen;
-            if (m.sheen_texname != "") {
+            if (!m.sheen_texname.empty()) {
                 material.m_fresnel_texture.load(directory, m.sheen_texname, 1);
             }
             material.m_shininess = m.roughness;
-            if (m.roughness_texname != "") {
+            if (!m.roughness_texname.empty()) {
                 material.m_shininess_texture.load(directory, m.roughness_texname, 1);
             }
             material.m_emission = m.emission[0];
-            if (m.emissive_texname != "") {
+            if (!m.emissive_texname.empty()) {
                 material.m_emission_texture.load(directory, m.emissive_texname, 4);
             }
             material.m_transparency = m.transmittance[0];
@@ -160,7 +160,7 @@ namespace labhelper {
         // indexed lookups, but will store a simple vertex stream per mesh.
         ///////////////////////////////////////////////////////////////////////
         uint64_t number_of_vertices = 0;
-        for (const auto& shape : shapes) {
+        for (const auto& shape: shapes) {
             number_of_vertices += shape.mesh.indices.size();
         }
         model->m_positions.resize(number_of_vertices);
@@ -172,7 +172,7 @@ namespace labhelper {
         // if no normal is supplied.
         ///////////////////////////////////////////////////////////////////////
         std::vector<glm::vec4> auto_normals(attrib.vertices.size() / 3);
-        for (const auto& shape : shapes) {
+        for (const auto& shape: shapes) {
             for (int face = 0; face < int(shape.mesh.indices.size()) / 3; face++) {
                 glm::vec3 v0 = glm::vec3(attrib.vertices[shape.mesh.indices[face * 3 + 0].vertex_index * 3 + 0],
                                          attrib.vertices[shape.mesh.indices[face * 3 + 0].vertex_index * 3 + 1],
@@ -193,7 +193,7 @@ namespace labhelper {
                 auto_normals[shape.mesh.indices[face * 3 + 2].vertex_index] += glm::vec4(face_normal, 1.0f);
             }
         }
-        for (auto& normal : auto_normals) {
+        for (auto& normal: auto_normals) {
             normal = (1.0f / normal.w) * normal;
         }
 
@@ -202,7 +202,7 @@ namespace labhelper {
         // materials will be split into several meshes with unique names
         ///////////////////////////////////////////////////////////////////////
         int vertices_so_far = 0;
-        for (const auto& shape : shapes) {
+        for (const auto& shape: shapes) {
             ///////////////////////////////////////////////////////////////////
             // The shapes in an OBJ file may several different materials.
             // If so, we will split the shape into one Mesh per Material
@@ -226,16 +226,13 @@ namespace labhelper {
                 uint64_t number_of_faces = shape.mesh.indices.size() / 3;
                 for (int i = current_material_starting_face; i < number_of_faces; i++) {
                     if (shape.mesh.material_ids[i] != current_material_index) {
-                        if (next_material_index >= 0)
+                        if (next_material_index >= 0 || finished_materials[shape.mesh.material_ids[i]]) {
                             continue;
-                        else if (finished_materials[shape.mesh.material_ids[i]])
-                            continue;
-                        else { // Found a new material that we have not processed.
+                        } else { // Found a new material that we have not processed.
                             next_material_index = shape.mesh.material_ids[i];
                             next_material_starting_face = i;
                         }
-                    }
-                    else {
+                    } else {
                         ///////////////////////////////////////////////////////
                         // Now we generate the vertices
                         ///////////////////////////////////////////////////////
@@ -249,8 +246,7 @@ namespace labhelper {
                                 // No normal, use the autogenerated
                                 model->m_normals[vertices_so_far + j] = glm::vec3(
                                     auto_normals[shape.mesh.indices[i * 3 + j].vertex_index]);
-                            }
-                            else {
+                            } else {
                                 model->m_normals[vertices_so_far + j] =
                                     glm::vec3(attrib.normals[shape.mesh.indices[i * 3 + j].normal_index * 3 + 0],
                                               attrib.normals[shape.mesh.indices[i * 3 + j].normal_index * 3 + 1],
@@ -259,8 +255,7 @@ namespace labhelper {
                             if (shape.mesh.indices[i * 3 + j].texcoord_index == -1) {
                                 // No UV coordinates. Use null.
                                 model->m_texture_coordinates[vertices_so_far + j] = glm::vec2(0.0f);
-                            }
-                            else {
+                            } else {
                                 model->m_texture_coordinates[vertices_so_far + j] = glm::vec2(
                                     attrib.texcoords[shape.mesh.indices[i * 3 + j].texcoord_index * 2 + 0],
                                     attrib.texcoords[shape.mesh.indices[i * 3 + j].texcoord_index * 2 + 1]);
@@ -288,28 +283,30 @@ namespace labhelper {
         glBindVertexArray(model->m_vaob);
         glGenBuffers(1, &model->m_positions_bo);
         glBindBuffer(GL_ARRAY_BUFFER, model->m_positions_bo);
-        glBufferData(GL_ARRAY_BUFFER, model->m_positions.size() * sizeof(glm::vec3), &model->m_positions[0].x,
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (model->m_positions.size() * sizeof(glm::vec3)),
+                     &model->m_positions[0].x,
                      GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
         glEnableVertexAttribArray(0);
         glGenBuffers(1, &model->m_normals_bo);
         glBindBuffer(GL_ARRAY_BUFFER, model->m_normals_bo);
-        glBufferData(GL_ARRAY_BUFFER, model->m_normals.size() * sizeof(glm::vec3), &model->m_normals[0].x,
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (model->m_normals.size() * sizeof(glm::vec3)),
+                     &model->m_normals[0].x,
                      GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, nullptr);
         glEnableVertexAttribArray(1);
         glGenBuffers(1, &model->m_texture_coordinates_bo);
         glBindBuffer(GL_ARRAY_BUFFER, model->m_texture_coordinates_bo);
-        glBufferData(GL_ARRAY_BUFFER, model->m_texture_coordinates.size() * sizeof(glm::vec2),
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (model->m_texture_coordinates.size() * sizeof(glm::vec2)),
                      &model->m_texture_coordinates[0].x, GL_STATIC_DRAW);
-        glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 0);
+        glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, nullptr);
         glEnableVertexAttribArray(2);
 
         std::cout << "done.\n";
         return model;
     }
 
-    void saveModelToOBJ(Model* model, std::string path) {
+    void saveModelToOBJ(Model* model, const std::string& path) {
         ///////////////////////////////////////////////////////////////////////
         // Separate filename into directory, base filename and extension
         // NOTE: This can be made a LOT simpler as soon as compilers properly
@@ -320,12 +317,11 @@ namespace labhelper {
         if (separator != std::string::npos) {
             filename = path.substr(separator + 1, path.size() - separator - 1);
             directory = path.substr(0, separator + 1);
-        }
-        else {
+        } else {
             filename = path;
             directory = "./";
         }
-        separator = filename.find_last_of(".");
+        separator = filename.find_last_of('.');
         if (separator == std::string::npos) {
             std::cout << "Fatal: loadModelFromOBJ(): Expecting filename ending in '.obj'\n";
             exit(1);
@@ -342,7 +338,7 @@ namespace labhelper {
             return;
         }
         mat_file << "# Exported by Chalmers Graphics Group\n";
-        for (auto mat : model->m_materials) {
+        for (const auto& mat: model->m_materials) {
             mat_file << "newmtl " << mat.m_name << "\n";
             mat_file << "Kd " << mat.m_color.x << " " << mat.m_color.y << " " << mat.m_color.z << "\n";
             mat_file << "Ks " << mat.m_reflectivity << " " << mat.m_reflectivity << " " << mat.m_reflectivity
@@ -353,18 +349,24 @@ namespace labhelper {
             mat_file << "Ke " << mat.m_emission << " " << mat.m_emission << " " << mat.m_emission << "\n";
             mat_file << "Tf " << mat.m_transparency << " " << mat.m_transparency << " " << mat.m_transparency
                      << "\n";
-            if (mat.m_color_texture.valid)
+            if (mat.m_color_texture.valid) {
                 mat_file << "map_Kd " << mat.m_color_texture.filename << "\n";
-            if (mat.m_reflectivity_texture.valid)
+            }
+            if (mat.m_reflectivity_texture.valid) {
                 mat_file << "map_Ks " << mat.m_reflectivity_texture.filename << "\n";
-            if (mat.m_metalness_texture.valid)
+            }
+            if (mat.m_metalness_texture.valid) {
                 mat_file << "map_Pm " << mat.m_metalness_texture.filename << "\n";
-            if (mat.m_fresnel_texture.valid)
+            }
+            if (mat.m_fresnel_texture.valid) {
                 mat_file << "map_Ps " << mat.m_fresnel_texture.filename << "\n";
-            if (mat.m_shininess_texture.valid)
+            }
+            if (mat.m_shininess_texture.valid) {
                 mat_file << "map_Pr " << mat.m_shininess_texture.filename << "\n";
-            if (mat.m_emission_texture.valid)
+            }
+            if (mat.m_emission_texture.valid) {
                 mat_file << "map_Ke " << mat.m_emission_texture.filename << "\n";
+            }
         }
         mat_file.close();
 
@@ -379,7 +381,7 @@ namespace labhelper {
         obj_file << "# Exported by Chalmers Graphics Group\n";
         obj_file << "mtllib " << filename << ".mtl\n";
         int vertex_counter = 1;
-        for (auto mesh : model->m_meshes) {
+        for (const auto& mesh: model->m_meshes) {
             obj_file << "o " << mesh.m_name << "\n";
             obj_file << "g " << mesh.m_name << "\n";
             obj_file << "usemtl " << model->m_materials[mesh.m_material_idx].m_name << "\n";
@@ -395,7 +397,7 @@ namespace labhelper {
                 obj_file << "vt " << model->m_texture_coordinates[i].x << " " << model->m_texture_coordinates[i].y
                          << "\n";
             }
-            int number_of_faces = mesh.m_number_of_vertices / 3;
+            int number_of_faces = (int) mesh.m_number_of_vertices / 3;
             for (int i = 0; i < number_of_faces; i++) {
                 obj_file << "f " << vertex_counter << "/" << vertex_counter << "/" << vertex_counter << " "
                          << vertex_counter + 1 << "/" << vertex_counter + 1 << "/" << vertex_counter + 1 << " "
@@ -409,8 +411,7 @@ namespace labhelper {
 // Free model
 ///////////////////////////////////////////////////////////////////////
     void freeModel(Model* model) {
-        if (model != nullptr)
-            delete model;
+        delete model;
     }
 
 ///////////////////////////////////////////////////////////////////////
@@ -418,7 +419,7 @@ namespace labhelper {
 ///////////////////////////////////////////////////////////////////////
     void render(const Model* model, const bool submitMaterials) {
         glBindVertexArray(model->m_vaob);
-        for (auto& mesh : model->m_meshes) {
+        for (auto& mesh: model->m_meshes) {
             if (submitMaterials) {
                 const Material& material = model->m_materials[mesh.m_material_idx];
 
@@ -468,7 +469,7 @@ namespace labhelper {
                              &material.m_shininess);
                 glUniform1fv(glGetUniformLocation(current_program, "material_emission"), 1, &material.m_emission);
             }
-            glDrawArrays(GL_TRIANGLES, mesh.m_start_index, (GLsizei) mesh.m_number_of_vertices);
+            glDrawArrays(GL_TRIANGLES, (GLint) mesh.m_start_index, (GLsizei) mesh.m_number_of_vertices);
         }
     }
 } // namespace labhelper

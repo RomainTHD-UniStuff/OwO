@@ -90,7 +90,7 @@ namespace labhelper {
 /**
 	 * Helper function: creates a cube map using the files specified for each face.
 	 */
-    GLuint loadCubeMap(const char* facePosX, const char* faceNegX, const char* facePosY, const char* faceNegY,
+     GLuint loadCubeMap(const char* facePosX, const char* faceNegX, const char* facePosY, const char* faceNegY,
                        const char* facePosZ, const char* faceNegZ);
 
 /**
@@ -121,7 +121,7 @@ namespace labhelper {
     GLuint
     createAddAttribBuffer(GLuint vertexArrayObject,
                           const void* data,
-                          const size_t dataSize,
+                          size_t dataSize,
                           GLuint attributeIndex,
                           GLsizei attributeSize,
                           GLenum type,
@@ -139,13 +139,13 @@ namespace labhelper {
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const glm::mat4& matrix);
 
-    void setUniformSlow(GLuint shaderProgram, const char* name, const float value);
+    void setUniformSlow(GLuint shaderProgram, const char* name, float value);
 
-    void setUniformSlow(GLuint shaderProgram, const char* name, const GLint value);
+    void setUniformSlow(GLuint shaderProgram, const char* name, GLint value);
 
     void setUniformSlow(GLuint shaderProgram, const char* name, const glm::vec3& value);
 
-    void setUniformSlow(GLuint shaderProgram, const char* name, const uint32_t nof_values, const glm::vec3* values);
+    void setUniformSlow(GLuint shaderProgram, const char* name, uint32_t nof_values, const glm::vec3* values);
 
 /**
 	* Helper to draw a single quad (two triangles) that cover the entire screen
@@ -168,7 +168,7 @@ namespace labhelper {
 	* Code for generating random, uniformly distributed floating point
 	* numbers in the interval [from, to].
 	*/
-    float uniform_randf(const float from, const float to);
+    float uniform_randf(float from, float to);
 
 /**
 	* Code for generating random, uniformly distributed floating point
