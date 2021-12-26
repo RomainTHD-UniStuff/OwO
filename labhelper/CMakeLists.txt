@@ -13,11 +13,11 @@ find_package(OpenGL REQUIRED)
 
 # Build and link library.
 add_library(${PROJECT_NAME}
-        labhelper.h
+        labhelper.hpp
         labhelper.cpp
-        Model.h
+        Model.hpp
         Model.cpp
-        imgui_impl_sdl_gl3.h
+        imgui_impl_sdl_gl3.hpp
         imgui_impl_sdl_gl3.cpp
         )
 

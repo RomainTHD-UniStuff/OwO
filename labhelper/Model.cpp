@@ -1,4 +1,4 @@
-#include "Model.h"
+#include "Model.hpp"
 #include <iostream>
 
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc

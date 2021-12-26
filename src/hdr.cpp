@@ -1,4 +1,4 @@
-#include "hdr.h"
+#include "hdr.hpp"
 #include <iostream>
 #include <stb_image.h>
 

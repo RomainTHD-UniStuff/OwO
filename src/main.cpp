@@ -11,19 +11,19 @@ unsigned int NvOptimusEnablement = 0x00000001;
 #include <algorithm>
 #include <chrono>
 
-#include <labhelper.h>
+#include <labhelper.hpp>
 #include <imgui.h>
-#include <imgui_impl_sdl_gl3.h>
+#include <imgui_impl_sdl_gl3.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
 using namespace glm;
 
-#include <Model.h>
-#include "hdr.h"
-#include "fbo.h"
-#include "heightfield.h"
+#include <Model.hpp>
+#include "hdr.hpp"
+#include "fbo.hpp"
+#include "heightfield.hpp"
 
 
 using std::min;

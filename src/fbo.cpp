@@ -1,6 +1,6 @@
-#include "fbo.h"
+#include "fbo.hpp"
 #include <cstdint>
-#include <labhelper.h>
+#include <labhelper.hpp>
 
 FboInfo::FboInfo(int numberOfColorBuffers) :
     isComplete(false),

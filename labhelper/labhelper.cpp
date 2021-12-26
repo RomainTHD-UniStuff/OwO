@@ -22,7 +22,7 @@
 
 #include <stb_image_write.h>
 
-#include "labhelper.h"
+#include "labhelper.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -39,7 +39,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/glm.hpp>
 #include <imgui.h>
-#include "imgui_impl_sdl_gl3.h"
+#include "imgui_impl_sdl_gl3.hpp"
 
 //#define HDR_FRAMEBUFFER
 

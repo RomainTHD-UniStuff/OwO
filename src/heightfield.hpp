@@ -1,4 +1,3 @@
-#include <string>
 #include <GL/glew.h>
 #include <vector>
 

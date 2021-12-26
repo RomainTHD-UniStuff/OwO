@@ -1,17 +1,12 @@
-
-#include "heightfield.h"
+#include "heightfield.hpp"
 
 #include <iostream>
 #include <cstdint>
-#include <vector>
 #include <glm/glm.hpp>
 #include <stb_image.h>
 
-using namespace glm;
 using std::string;
 
-/// generate a mesh in range -1 to 1 in x and z
-/// (y is 0 but will be altered in height field vertex shader)
 void HeightField::generateMesh(int p_tessellation) noexcept {
     this->tessellation = p_tessellation;
 
@@ -52,19 +47,22 @@ void HeightField::generateMesh(int p_tessellation) noexcept {
 
     // Positions
     glBindBuffer(GL_ARRAY_BUFFER, this->positionBuffer);
-    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), &positions[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (positions.size() * sizeof(float)), &positions[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, nullptr);
     glEnableVertexAttribArray(0);
 
     // Texture coordinates
     glBindBuffer(GL_ARRAY_BUFFER, this->uvBuffer);
-    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), &texCoords[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (texCoords.size() * sizeof(float)), &texCoords[0], GL_STATIC_DRAW);
     glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, nullptr);
     glEnableVertexAttribArray(2);
 
     // Triangle indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 (GLsizeiptr) (indices.size() * sizeof(uint32_t)),
+                 &indices[0],
+                 GL_STATIC_DRAW);
 }
 
 void HeightField::submitTriangles(bool linesOnly) const noexcept {
@@ -83,7 +81,7 @@ void HeightField::submitTriangles(bool linesOnly) const noexcept {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
-    glDrawElements(GL_TRIANGLE_STRIP, this->indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLE_STRIP, (GLsizei) this->indices.size(), GL_UNSIGNED_INT, nullptr);
 
     if (linesOnly) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
