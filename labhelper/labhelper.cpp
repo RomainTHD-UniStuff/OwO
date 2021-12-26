@@ -1,14 +1,14 @@
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define VC_EXTRALEAN
-#define NOMINMAX //          - Macros min(a,b) and max(a,b)
+#   define WIN32_LEAN_AND_MEAN
+#   define VC_EXTRALEAN
+#   define NOMINMAX //          - Macros min(a,b) and max(a,b)
 
-#include <windows.h>
+#   include <windows.h>
 
-#undef near
-#undef far
+#   undef near
+#   undef far
 #else
-#include <signal.h>
+#   include <signal.h>
 #endif // WIN32
 
 #include <GL/glew.h>
@@ -40,8 +40,6 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include "imgui_impl_sdl_gl3.hpp"
-
-//#define HDR_FRAMEBUFFER
 
 using std::vector;
 
