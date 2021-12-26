@@ -46,10 +46,10 @@
 
 #define CHECK_GL_ERROR()                                                                                     \
     {                                                                                                        \
-        labhelper::checkGLError(__FILE__, __LINE__) && (__debugbreak(), 1);                                  \
+        owo::checkGLError(__FILE__, __LINE__) && (__debugbreak(), 1);                                  \
     }
 
-namespace labhelper {
+namespace owo {
 #if !defined(_WIN32)
 #define __debugbreak() assert(false)
 #endif
@@ -185,5 +185,5 @@ namespace labhelper {
 	* Generate points with a cosine distribution on the hemisphere
 	*/
     glm::vec3 cosineSampleHemisphere();
-} // namespace labhelper
+} // namespace owo
 #endif // LAB_GL_UTILS_H

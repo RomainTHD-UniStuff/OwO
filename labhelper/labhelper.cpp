@@ -45,7 +45,7 @@
 
 using std::vector;
 
-namespace labhelper {
+namespace owo {
     SDL_Window* init_window_SDL(std::string caption, int width, int height) {
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -94,8 +94,8 @@ namespace labhelper {
         ImGui_ImplSdlGL3_Init(window);
 
         // Check OpenGL properties
-        labhelper::startupGLDiagnostics();
-        labhelper::setupGLDebugMessages();
+        owo::startupGLDiagnostics();
+        owo::setupGLDebugMessages();
 
         // Flip textures vertically so they don't end up upside-down.
         stbi_set_flip_vertically_on_load(true);
@@ -590,7 +590,7 @@ namespace labhelper {
             static const glm::vec3 positions[] = {{worldSpaceLightPos.x, worldSpaceLightPos.y,
                                                                                worldSpaceLightPos.z},
                                                   {0.0f,                 0.0f, 0.0f}};
-            labhelper::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 3, GL_FLOAT);
+            owo::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 3, GL_FLOAT);
         }
         glBindVertexArray(vertexArrayObject);
         glDrawArrays(GL_LINES, 0, nofVertices);
@@ -611,7 +611,7 @@ namespace labhelper {
                                                   {-1.0f, -1.0f},
                                                   {1.0f,  1.0f},
                                                   {-1.0f, 1.0f}};
-            labhelper::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 2, GL_FLOAT);
+            owo::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 2, GL_FLOAT);
         }
         glBindVertexArray(vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, nofVertices);
@@ -680,4 +680,4 @@ namespace labhelper {
         ret.z = sqrt(glm::max(0.f, 1.f - ret.x * ret.x - ret.y * ret.y));
         return ret;
     }
-} // namespace labhelper
+} // namespace owo

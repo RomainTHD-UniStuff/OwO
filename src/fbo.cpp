@@ -86,7 +86,7 @@ bool FboInfo::checkFramebufferComplete() const {
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        labhelper::fatal_error("Framebuffer not complete");
+        owo::fatal_error("Framebuffer not complete");
     }
 
     return (status == GL_FRAMEBUFFER_COMPLETE);

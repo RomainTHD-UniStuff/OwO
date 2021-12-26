@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stb_image.h>
 
-namespace labhelper {
+namespace owo {
     struct HDRImage {
         int width{}, height{}, components{};
         float* data = nullptr;
@@ -59,4 +59,4 @@ namespace labhelper {
 
         return texId;
     }
-} // namespace labhelper
+} // namespace owo

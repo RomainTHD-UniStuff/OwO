@@ -9,7 +9,7 @@
 #include <GL/glew.h>
 #include <stb_image.h>
 
-namespace labhelper {
+namespace owo {
     bool Texture::load(const std::string& _directory, const std::string& _filename, int _components) {
         filename = _filename;
         directory = _directory;
@@ -472,4 +472,4 @@ namespace labhelper {
             glDrawArrays(GL_TRIANGLES, (GLint) mesh.m_start_index, (GLsizei) mesh.m_number_of_vertices);
         }
     }
-} // namespace labhelper
+} // namespace owo

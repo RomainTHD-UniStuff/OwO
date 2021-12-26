@@ -100,7 +100,7 @@ float rotation_speed = 15.f;
 ///////////////////////////////////////////////////////////////////////////////
 // Models
 ///////////////////////////////////////////////////////////////////////////////
-labhelper::Model* sphereModel = nullptr;
+owo::Model* sphereModel = nullptr;
 
 HeightField terrain;
 bool onlyTrianglesMesh = false;
@@ -111,21 +111,21 @@ float terrainSize = 100.f;
 float randomSeed = 100.;
 
 void loadShaders(bool is_reload) {
-    GLuint shader = labhelper::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag",
-                                                 is_reload);
+    GLuint shader = owo::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag",
+                                           is_reload);
     if (shader != 0) {
         simpleShaderProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../shader/background.vert", "../shader/background.frag",
-                                          is_reload);
+    shader = owo::loadShaderProgram("../shader/background.vert", "../shader/background.frag",
+                                    is_reload);
     if (shader != 0) {
         backgroundProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag", is_reload);
+    shader = owo::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag", is_reload);
     if (shader != 0) {
         shaderProgram = shader;
     }
-    shader = labhelper::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag", is_reload);
+    shader = owo::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag", is_reload);
     if (shader != 0) {
         heightfieldProgram = shader;
     }
@@ -135,16 +135,16 @@ void initGL() {
     ///////////////////////////////////////////////////////////////////////
     //		Load Shaders
     ///////////////////////////////////////////////////////////////////////
-    heightfieldProgram = labhelper::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag");
-    backgroundProgram = labhelper::loadShaderProgram("../shader/background.vert",
-                                                     "../shader/background.frag");
-    shaderProgram = labhelper::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag");
-    simpleShaderProgram = labhelper::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag");
+    heightfieldProgram = owo::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag");
+    backgroundProgram = owo::loadShaderProgram("../shader/background.vert",
+                                               "../shader/background.frag");
+    shaderProgram = owo::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag");
+    simpleShaderProgram = owo::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag");
 
     ///////////////////////////////////////////////////////////////////////
     // Load models and set up model matrices
     ///////////////////////////////////////////////////////////////////////
-    sphereModel = labhelper::loadModelFromOBJ("../scenes/sphere.obj");
+    sphereModel = owo::loadModelFromOBJ("../scenes/sphere.obj");
 
     ///////////////////////////////////////////////////////////////////////
     // Load environment map
@@ -156,9 +156,9 @@ void initGL() {
         filenames.push_back("../scenes/envmaps/" + envmap_base_name + "_dl_" + std::to_string(i) + ".hdr");
     }
 
-    reflectionMap = labhelper::loadHdrMipmapTexture(filenames);
-    environmentMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
-    irradianceMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + "_irradiance.hdr");
+    reflectionMap = owo::loadHdrMipmapTexture(filenames);
+    environmentMap = owo::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
+    irradianceMap = owo::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + "_irradiance.hdr");
 
     shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
     glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
@@ -176,18 +176,18 @@ void debugDrawLight(const glm::mat4& viewMatrix,
                     const glm::vec3& worldSpaceLightPos) {
     mat4 modelMatrix = glm::translate(worldSpaceLightPos);
     glUseProgram(shaderProgram);
-    labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix",
+    owo::setUniformSlow(shaderProgram, "modelViewProjectionMatrix",
                               projectionMatrix * viewMatrix * modelMatrix);
-    labhelper::render(sphereModel);
+    owo::render(sphereModel);
 }
 
 
 void drawBackground(const mat4& viewMatrix, const mat4& projectionMatrix) {
     glUseProgram(backgroundProgram);
-    labhelper::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
-    labhelper::setUniformSlow(backgroundProgram, "inv_PV", inverse(projectionMatrix * viewMatrix));
-    labhelper::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
-    labhelper::drawFullScreenQuad();
+    owo::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
+    owo::setUniformSlow(backgroundProgram, "inv_PV", inverse(projectionMatrix * viewMatrix));
+    owo::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
+    owo::drawFullScreenQuad();
 }
 
 void drawMesh(GLuint currentShaderProgram,
@@ -199,35 +199,35 @@ void drawMesh(GLuint currentShaderProgram,
 
     // Light source
     vec4 viewSpaceLightPosition = viewMatrix * vec4(lightPosition, 1.0f);
-    labhelper::setUniformSlow(currentShaderProgram, "point_light_color", point_light_color);
-    labhelper::setUniformSlow(currentShaderProgram, "point_light_intensity_multiplier",
-                              point_light_intensity_multiplier);
-    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
-    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
-                              normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
+    owo::setUniformSlow(currentShaderProgram, "point_light_color", point_light_color);
+    owo::setUniformSlow(currentShaderProgram, "point_light_intensity_multiplier",
+                        point_light_intensity_multiplier);
+    owo::setUniformSlow(currentShaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
+    owo::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
+                        normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
     mat4 lightMatrix = translate(vec3(0.5f))
                        * scale(vec3(0.5f))
                        * lightProjectionMatrix
                        * lightViewMatrix
                        * inverse(viewMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
+    owo::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
 
-    labhelper::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
+    owo::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
 
     mat4 modelMatrix = rotate(radians(-45.f), vec3(0., 1., 0.))
                        * scale(mat4(1.f), vec3(terrainSize, 25.f, terrainSize));
 
-    labhelper::setUniformSlow(currentShaderProgram, "seed", vec2(randomSeed, randomSeed / 2));
+    owo::setUniformSlow(currentShaderProgram, "seed", vec2(randomSeed, randomSeed / 2));
 
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * modelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "normalMatrix",
-                              inverse(transpose(viewMatrix * modelMatrix)));
+    owo::setUniformSlow(currentShaderProgram, "modelViewMatrix", viewMatrix * modelMatrix);
+    owo::setUniformSlow(currentShaderProgram, "normalMatrix",
+                        inverse(transpose(viewMatrix * modelMatrix)));
 
-    labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
-    labhelper::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
+    owo::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
+    owo::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
                               projectionMatrix * viewMatrix * modelMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "densityIntensity", (meshDensityIntensity * terrainSize) / 100);
-    labhelper::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
+    owo::setUniformSlow(currentShaderProgram, "densityIntensity", (meshDensityIntensity * terrainSize) / 100);
+    owo::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
 
     terrain.submitTriangles(onlyTrianglesMesh);
 }
@@ -240,24 +240,24 @@ void drawScene(GLuint currentShaderProgram,
     glUseProgram(currentShaderProgram);
     // Light source
     vec4 viewSpaceLightPosition = viewMatrix * vec4(lightPosition, 1.0f);
-    labhelper::setUniformSlow(currentShaderProgram, "point_light_color", point_light_color);
-    labhelper::setUniformSlow(currentShaderProgram, "point_light_intensity_multiplier",
-                              point_light_intensity_multiplier);
-    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
-    labhelper::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
-                              normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
+    owo::setUniformSlow(currentShaderProgram, "point_light_color", point_light_color);
+    owo::setUniformSlow(currentShaderProgram, "point_light_intensity_multiplier",
+                        point_light_intensity_multiplier);
+    owo::setUniformSlow(currentShaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
+    owo::setUniformSlow(currentShaderProgram, "viewSpaceLightDir",
+                        normalize(vec3(viewMatrix * vec4(-lightPosition, 0.0f))));
     mat4 lightMatrix = translate(vec3(0.5f))
                        * scale(vec3(0.5f))
                        * lightProjectionMatrix
                        * lightViewMatrix
                        * inverse(viewMatrix);
-    labhelper::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
+    owo::setUniformSlow(currentShaderProgram, "lightMatrix", lightMatrix);
 
     // Environment
-    labhelper::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
+    owo::setUniformSlow(currentShaderProgram, "environment_multiplier", environment_multiplier);
 
     // camera
-    labhelper::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
+    owo::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
 }
 
 void display() {
@@ -484,7 +484,7 @@ int main(int argc, char* argv[]) {
     (void) argc;
     (void) argv;
 
-    g_window = labhelper::init_window_SDL("OpenGL Project");
+    g_window = owo::init_window_SDL("OpenGL Project");
 
     initGL();
 
@@ -512,9 +512,9 @@ int main(int argc, char* argv[]) {
         stopRendering = handleEvents();
     }
     // Free Models
-    labhelper::freeModel(sphereModel);
+    owo::freeModel(sphereModel);
 
     // Shut down everything. This includes the window and all other subsystems.
-    labhelper::shutDown(g_window);
+    owo::shutDown(g_window);
     return 0;
 }

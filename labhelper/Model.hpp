@@ -4,7 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace labhelper {
+namespace owo {
     struct Texture {
         bool valid = false;
         uint32_t gl_id = 0;
@@ -80,4 +80,4 @@ namespace labhelper {
     void freeModel(Model* model);
 
     void render(const Model* model, bool submitMaterials = true);
-} // namespace labhelper
+} // namespace owo
