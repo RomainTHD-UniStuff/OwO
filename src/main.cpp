@@ -1,5 +1,3 @@
-
-
 #ifdef _WIN32
 extern "C" _declspec(dllexport)
 unsigned int NvOptimusEnablement = 0x00000001;
@@ -25,7 +23,6 @@ using namespace glm;
 #include "fbo.hpp"
 #include "heightfield.hpp"
 
-
 using std::min;
 using std::max;
 
@@ -48,7 +45,6 @@ bool g_isMouseRightDragging = false;
 // Shader programs
 ///////////////////////////////////////////////////////////////////////////////
 GLuint shaderProgram;       // Shader for rendering the final image
-GLuint simpleShaderProgram; // Shader used to draw the shadow map
 GLuint backgroundProgram;
 GLuint heightfieldProgram;
 
@@ -69,23 +65,8 @@ bool lightManualOnly = false;
 
 float point_light_intensity_multiplier = 10000.0f;
 
-///////////////////////////////////////////////////////////////////////////////
-// Shadow map
-///////////////////////////////////////////////////////////////////////////////
-enum ClampMode {
-    Edge = 1,
-    Border = 2
-};
-
 FboInfo shadowMapFB;
 int shadowMapResolution = 1024;
-int shadowMapClampMode = ClampMode::Edge;
-bool shadowMapClampBorderShadowed = false;
-bool usePolygonOffset = true;
-bool useSoftFalloff = false;
-bool useHardwarePCF = false;
-float polygonOffset_factor = 1.f;
-float polygonOffset_units = 1.0f;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Camera parameters.
@@ -111,20 +92,18 @@ float terrainSize = 100.f;
 float randomSeed = 100.;
 
 void loadShaders(bool is_reload) {
-    GLuint shader = owo::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag",
-                                           is_reload);
-    if (shader != 0) {
-        simpleShaderProgram = shader;
-    }
-    shader = owo::loadShaderProgram("../shader/background.vert", "../shader/background.frag",
-                                    is_reload);
+    GLuint shader;
+
+    shader = owo::loadShaderProgram("../shader/background.vert", "../shader/background.frag", is_reload);
     if (shader != 0) {
         backgroundProgram = shader;
     }
+
     shader = owo::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag", is_reload);
     if (shader != 0) {
         shaderProgram = shader;
     }
+
     shader = owo::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag", is_reload);
     if (shader != 0) {
         heightfieldProgram = shader;
@@ -132,14 +111,11 @@ void loadShaders(bool is_reload) {
 }
 
 void initGL() {
-    ///////////////////////////////////////////////////////////////////////
-    //		Load Shaders
-    ///////////////////////////////////////////////////////////////////////
+    // Load Shaders
     heightfieldProgram = owo::loadShaderProgram("../shader/heightfield.vert", "../shader/heightfield.frag");
     backgroundProgram = owo::loadShaderProgram("../shader/background.vert",
                                                "../shader/background.frag");
     shaderProgram = owo::loadShaderProgram("../shader/shading.vert", "../shader/shading.frag");
-    simpleShaderProgram = owo::loadShaderProgram("../shader/simple.vert", "../shader/simple.frag");
 
     ///////////////////////////////////////////////////////////////////////
     // Load models and set up model matrices
@@ -177,7 +153,7 @@ void debugDrawLight(const glm::mat4& viewMatrix,
     mat4 modelMatrix = glm::translate(worldSpaceLightPos);
     glUseProgram(shaderProgram);
     owo::setUniformSlow(shaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * modelMatrix);
+                        projectionMatrix * viewMatrix * modelMatrix);
     owo::render(sphereModel);
 }
 
@@ -225,7 +201,7 @@ void drawMesh(GLuint currentShaderProgram,
 
     owo::setUniformSlow(currentShaderProgram, "viewInverse", inverse(viewMatrix));
     owo::setUniformSlow(currentShaderProgram, "modelViewProjectionMatrix",
-                              projectionMatrix * viewMatrix * modelMatrix);
+                        projectionMatrix * viewMatrix * modelMatrix);
     owo::setUniformSlow(currentShaderProgram, "densityIntensity", (meshDensityIntensity * terrainSize) / 100);
     owo::setUniformSlow(currentShaderProgram, "heightIntensity", meshHeightIntensity / 100);
 
@@ -299,54 +275,8 @@ void display() {
     glBindTexture(GL_TEXTURE_2D, reflectionMap);
     glActiveTexture(GL_TEXTURE0);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Set up shadow map parameters
-    ///////////////////////////////////////////////////////////////////////////
-    // >>> @task 1
-
-    if (shadowMapFB.width != shadowMapResolution || shadowMapFB.height != shadowMapResolution) {
-        shadowMapFB.resize(shadowMapResolution, shadowMapResolution);
-    }
-
-    GLint glMode = useHardwarePCF ? GL_LINEAR : GL_NEAREST;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glMode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glMode);
-
-    if (shadowMapClampMode == ClampMode::Edge) {
-        glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    }
-
-    if (shadowMapClampMode == ClampMode::Border) {
-        glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        vec4 border(shadowMapClampBorderShadowed ? 0.f : 1.f);
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, &border.x);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Draw Shadow Map
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (usePolygonOffset) {
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(polygonOffset_factor, polygonOffset_units);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFB.framebufferId);
-    glViewport(0, 0, shadowMapFB.width, shadowMapFB.height);
-    glClearColor(0.2f, 0.2f, 0.8f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    drawScene(simpleShaderProgram, lightViewMatrix, lightProjMatrix, lightViewMatrix, lightProjMatrix);
-
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, shadowMapFB.depthBuffer);
-
-    if (usePolygonOffset) {
-        glDisable(GL_POLYGON_OFFSET_FILL);
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Draw from camera
